@@ -440,7 +440,7 @@ export function PopularDestinations() {
     <section className="relative bg-sky-light py-20 md:py-28 overflow-hidden">
       <ScrollClouds />
 
-      <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-navy">
             Popular Destinations
