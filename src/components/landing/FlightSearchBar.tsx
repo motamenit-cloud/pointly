@@ -98,6 +98,7 @@ export function FlightSearchBar() {
   const [fromCode, setFromCode] = useState("");
   const [toCode, setToCode] = useState("");
   const [date, setDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
   const [showPassengers, setShowPassengers] = useState(false);
   const [showCabins, setShowCabins] = useState(false);
 
@@ -116,6 +117,9 @@ export function FlightSearchBar() {
       passengers: pax,
       tripType: activeTrip === "Round Trip" ? "roundtrip" : "oneway",
     });
+    if (activeTrip === "Round Trip" && returnDate) {
+      params.set("returnDate", returnDate);
+    }
     router.push(`/search?${params.toString()}`);
   };
 
@@ -240,6 +244,25 @@ export function FlightSearchBar() {
                 />
               </div>
             </div>
+
+            {/* Return Date — only shown for Round Trip */}
+            {activeTrip === "Round Trip" && (
+              <div className="flex-1 w-full">
+                <label className="text-xs text-text-muted font-medium block mb-1">
+                  Return Date
+                </label>
+                <div className="flex items-center gap-2 border-b border-navy/10 pb-2">
+                  <Calendar size={16} className="text-text-muted" />
+                  <input
+                    type="date"
+                    value={returnDate}
+                    min={date || undefined}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    className="w-full text-sm text-navy font-medium placeholder:text-navy/60 outline-none bg-transparent"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Search Button */}
             <button

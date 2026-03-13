@@ -9,7 +9,7 @@ export function HeroSection() {
           </h1>
           <div className="mt-6">
             <a
-              href="#search"
+              href="/onboarding"
               className="inline-block bg-navy text-white px-8 py-3.5 rounded-pill text-base font-semibold hover:bg-navy-dark transition-colors"
             >
               Get started
