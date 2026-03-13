@@ -8,12 +8,19 @@ import { FlightResultCard } from "@/components/search/FlightResultCard";
 import type { FlightResult } from "@/components/search/FlightResultCard";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { AIRPORTS } from "@/components/onboarding/airports";
+import { getUserProfile, type UserProfile } from "@/lib/userProfile";
+import {
+  personalizeResults,
+  getPersonalizedTip,
+  type PersonalizedFlight,
+} from "@/lib/personalizeResults";
 import {
   Plane,
   Calendar,
   ArrowRightLeft,
   ChevronDown,
   Loader2,
+  User,
 } from "lucide-react";
 
 /* ── Sort options ── */
@@ -76,10 +83,17 @@ function SearchResultsContent() {
   const passengers = searchParams.get("passengers") || "1";
 
   const [flights, setFlights] = useState<FlightResult[]>([]);
+  const [personalizedFlights, setPersonalizedFlights] = useState<PersonalizedFlight[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState("");
   const [activeSort, setActiveSort] = useState<SortValue>("picks");
   const [showSortMenu, setShowSortMenu] = useState(false);
+
+  // Load user profile on mount
+  useEffect(() => {
+    setProfile(getUserProfile());
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -93,18 +107,22 @@ function SearchResultsContent() {
     fetch(`/api/flights/search?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
-        setFlights(data.flights || []);
+        const rawFlights = data.flights || [];
+        setFlights(rawFlights);
+        setPersonalizedFlights(personalizeResults(rawFlights, profile));
         setSource(data.meta?.source || "");
         setLoading(false);
       })
       .catch(() => {
         setFlights([]);
+        setPersonalizedFlights([]);
         setLoading(false);
       });
-  }, [origin, destination, date, cabin, passengers]);
+  }, [origin, destination, date, cabin, passengers, profile]);
 
   /* Sort logic */
-  const sorted = [...flights].sort((a, b) => {
+  const flightsToSort = profile?.programs.length ? personalizedFlights : flights;
+  const sorted = [...flightsToSort].sort((a, b) => {
     if (activeSort === "points-asc") return a.bestPoints - b.bestPoints;
     if (activeSort === "duration") {
       const parseDur = (d: string) => {
@@ -114,12 +132,23 @@ function SearchResultsContent() {
       };
       return parseDur(a.duration) - parseDur(b.duration);
     }
-    /* picks — show badges first */
+    /* picks — if personalized, affordable first; otherwise badges first */
+    if (profile?.programs.length) {
+      const aPersonal = a as PersonalizedFlight;
+      const bPersonal = b as PersonalizedFlight;
+      if (aPersonal.canAfford && !bPersonal.canAfford) return -1;
+      if (!aPersonal.canAfford && bPersonal.canAfford) return 1;
+    }
     const badgeOrder = { "best-deal": 0, "lowest-points": 1, fastest: 2 };
     const aOrder = a.badge ? (badgeOrder[a.badge] ?? 9) : 9;
     const bOrder = b.badge ? (badgeOrder[b.badge] ?? 9) : 9;
     return aOrder - bOrder;
   });
+
+  // Get personalized tip
+  const personalTip = profile?.programs.length
+    ? getPersonalizedTip(personalizedFlights, profile)
+    : null;
 
   const activeSortLabel =
     sortOptions.find((o) => o.value === activeSort)?.label ?? "Sort";
@@ -128,8 +157,10 @@ function SearchResultsContent() {
   const destCity = cityFromCode(destination);
   const cabinDisplay = cabin.charAt(0).toUpperCase() + cabin.slice(1);
 
-  // Find the best deal for the tip banner
-  const bestDeal = flights.find((f) => f.badge === "lowest-points") || flights[0];
+  // Find the best deal for the generic tip banner
+  const bestDeal = !personalTip
+    ? flights.find((f) => f.badge === "lowest-points") || flights[0]
+    : null;
 
   return (
     <>
@@ -250,8 +281,25 @@ function SearchResultsContent() {
               </div>
             ) : (
               <div className="flex-1 space-y-4 min-w-0">
-                {/* Points tip banner */}
-                {bestDeal && (
+                {/* Personalized tip banner */}
+                {personalTip && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <User size={16} className="text-emerald-700" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-navy">
+                        {personalTip.title}
+                      </p>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        {personalTip.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Generic tip banner (only when no profile) */}
+                {bestDeal && !personalTip && (
                   <div className="bg-sky-light border border-sky-dark/30 rounded-xl px-5 py-3 flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-navy/10 flex items-center justify-center shrink-0 mt-0.5">
                       <span className="text-sm">💡</span>
@@ -269,9 +317,41 @@ function SearchResultsContent() {
                   </div>
                 )}
 
-                {sorted.map((flight) => (
-                  <FlightResultCard key={flight.id} flight={flight} />
-                ))}
+                {/* "Set up profile" prompt when no profile */}
+                {!profile?.programs.length && !loading && (
+                  <div className="bg-white border border-navy/10 rounded-xl px-5 py-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-navy">
+                        Get personalized results
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        Add your points balances to see which flights you can book.
+                      </p>
+                    </div>
+                    <a
+                      href="/onboarding"
+                      className="bg-coral text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-coral-dark transition-colors shrink-0"
+                    >
+                      Set up profile
+                    </a>
+                  </div>
+                )}
+
+                {sorted.map((flight) => {
+                  const pf = flight as PersonalizedFlight;
+                  return (
+                    <FlightResultCard
+                      key={flight.id}
+                      flight={flight}
+                      personalBadge={pf.personalBadge}
+                      canAfford={pf.canAfford}
+                      pointsGap={pf.pointsGap}
+                      userProgramName={pf.userProgramName}
+                      userProgramFullName={pf.userProgramFullName}
+                      userBalance={pf.userBalance}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Star, Zap, ArrowRight } from "lucide-react";
+import { ChevronDown, ChevronUp, Star, Zap, ArrowRight, CheckCircle, TrendingUp } from "lucide-react";
 import { AirlineLogo } from "./AirlineLogo";
 
 /* ── Types ── */
@@ -74,8 +74,42 @@ function ResultBadge({ type }: { type: "best-deal" | "lowest-points" | "fastest"
   );
 }
 
+/* ── Personal badge ── */
+function PersonalBadge({ type, pointsGap }: { type: "can-book" | "best-for-you" | "almost-there"; pointsGap?: number }) {
+  if (type === "can-book" || type === "best-for-you") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <CheckCircle size={12} />
+        {type === "best-for-you" ? "Best for you" : "You can book this!"}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+      <TrendingUp size={12} />
+      Need {(pointsGap ?? 0).toLocaleString()} more
+    </span>
+  );
+}
+
 /* ── Main card ── */
-export function FlightResultCard({ flight }: { flight: FlightResult }) {
+export function FlightResultCard({
+  flight,
+  personalBadge,
+  canAfford,
+  pointsGap,
+  userProgramName,
+  userProgramFullName,
+  userBalance,
+}: {
+  flight: FlightResult;
+  personalBadge?: "can-book" | "best-for-you" | "almost-there";
+  canAfford?: boolean;
+  pointsGap?: number;
+  userProgramName?: string;
+  userProgramFullName?: string;
+  userBalance?: number;
+}) {
   const [expanded, setExpanded] = useState(false);
 
   const stopsLabel =
@@ -88,9 +122,13 @@ export function FlightResultCard({ flight }: { flight: FlightResult }) {
   return (
     <div
       className={`bg-white rounded-2xl shadow-sm border transition-all ${
-        flight.badge === "best-deal"
-          ? "border-coral/30 shadow-md"
-          : "border-navy/8 hover:shadow-md"
+        personalBadge === "best-for-you"
+          ? "border-emerald-300 shadow-md ring-1 ring-emerald-100"
+          : canAfford
+            ? "border-emerald-200 shadow-md"
+            : flight.badge === "best-deal"
+              ? "border-coral/30 shadow-md"
+              : "border-navy/8 hover:shadow-md"
       }`}
     >
       {/* ── Top row: flight info + points cost ── */}
@@ -110,6 +148,7 @@ export function FlightResultCard({ flight }: { flight: FlightResult }) {
                   {flight.flightNumber}
                 </span>
                 {flight.badge && <ResultBadge type={flight.badge} />}
+                {personalBadge && <PersonalBadge type={personalBadge} pointsGap={pointsGap} />}
               </div>
 
               {/* Times + route */}
@@ -195,46 +234,78 @@ export function FlightResultCard({ flight }: { flight: FlightResult }) {
           </h4>
 
           <div className="space-y-2.5">
-            {flight.transferOptions.map((opt, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-navy/6"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-sky-light flex items-center justify-center text-navy">
-                    <Star size={14} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-navy truncate">
-                      {opt.program}
-                    </p>
-                    {opt.transferFrom && (
-                      <p className="text-xs text-text-muted">
-                        Transfer from {opt.transferFrom}
-                        {opt.transferRatio && ` (${opt.transferRatio})`}
-                      </p>
-                    )}
-                  </div>
-                </div>
+            {flight.transferOptions.map((opt, i) => {
+              // Check if this option matches the user's program
+              const isUserProgram =
+                userProgramName &&
+                (opt.transferFrom?.includes(userProgramName) ||
+                  opt.program.includes(userProgramName) ||
+                  (userProgramFullName && opt.transferFrom?.includes(userProgramFullName)) ||
+                  (userProgramFullName && opt.program.includes(userProgramFullName)));
+              const affordable =
+                isUserProgram && userBalance !== undefined && userBalance >= opt.points;
 
-                <div className="flex items-center gap-3 shrink-0">
-                  {opt.badge === "best" && (
-                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/20">
-                      <Star size={10} /> Best
-                    </span>
-                  )}
-                  <div className="text-right">
-                    <p className="text-base font-bold text-navy">
-                      {opt.points.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-text-muted">points</p>
+              return (
+                <div
+                  key={i}
+                  className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                    isUserProgram
+                      ? "bg-emerald-50/50 border-emerald-200"
+                      : "bg-white border-navy/6"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        isUserProgram
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-sky-light text-navy"
+                      }`}
+                    >
+                      {isUserProgram ? <CheckCircle size={14} /> : <Star size={14} />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-navy truncate">
+                        {opt.program}
+                      </p>
+                      {opt.transferFrom && (
+                        <p className="text-xs text-text-muted">
+                          Transfer from {opt.transferFrom}
+                          {opt.transferRatio && ` (${opt.transferRatio})`}
+                        </p>
+                      )}
+                      {isUserProgram && affordable && userBalance !== undefined && (
+                        <p className="text-xs text-emerald-600 font-medium">
+                          {(userBalance - opt.points).toLocaleString()} pts remaining after booking
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <button className="bg-coral text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-coral-dark transition-colors cursor-pointer">
-                    Book
-                  </button>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    {opt.badge === "best" && (
+                      <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/20">
+                        <Star size={10} /> Best
+                      </span>
+                    )}
+                    {isUserProgram && !opt.badge && (
+                      <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Your program
+                      </span>
+                    )}
+                    <div className="text-right">
+                      <p className="text-base font-bold text-navy">
+                        {opt.points.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-text-muted">points</p>
+                    </div>
+                    <button className="bg-coral text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-coral-dark transition-colors cursor-pointer">
+                      Book
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <p className="mt-3 text-xs text-text-muted">

@@ -7,6 +7,7 @@ import { WelcomeStep } from "@/components/onboarding/WelcomeStep";
 import { AirportStep } from "@/components/onboarding/AirportStep";
 import { ProgramsStep } from "@/components/onboarding/ProgramsStep";
 import { CompleteStep } from "@/components/onboarding/CompleteStep";
+import { saveUserProfile, type ProgramBalance } from "@/lib/userProfile";
 
 const TOTAL_STEPS = 4;
 
@@ -15,7 +16,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [selectedAirport, setSelectedAirport] = useState<string | null>(null);
-  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  const [programBalances, setProgramBalances] = useState<ProgramBalance[]>([]);
 
   const goNext = useCallback(() => {
     setDirection("forward");
@@ -28,14 +29,26 @@ export default function OnboardingPage() {
   }, []);
 
   const toggleProgram = useCallback((id: string) => {
-    setSelectedPrograms((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
+    setProgramBalances((prev) => {
+      const exists = prev.find((p) => p.programId === id);
+      if (exists) return prev.filter((p) => p.programId !== id);
+      return [...prev, { programId: id, balance: 0 }];
+    });
+  }, []);
+
+  const handleBalanceChange = useCallback((id: string, balance: number) => {
+    setProgramBalances((prev) =>
+      prev.map((p) => (p.programId === id ? { ...p, balance } : p)),
     );
   }, []);
 
   const handleFinish = useCallback(() => {
+    saveUserProfile({
+      homeAirport: selectedAirport,
+      programs: programBalances,
+    });
     router.push("/");
-  }, [router]);
+  }, [router, selectedAirport, programBalances]);
 
   return (
     <div className="min-h-screen bg-cream relative overflow-hidden">
@@ -54,8 +67,9 @@ export default function OnboardingPage() {
           )}
           {step === 2 && (
             <ProgramsStep
-              selectedPrograms={selectedPrograms}
+              programBalances={programBalances}
               onToggle={toggleProgram}
+              onBalanceChange={handleBalanceChange}
               onNext={goNext}
               onBack={goBack}
             />
@@ -63,7 +77,7 @@ export default function OnboardingPage() {
           {step === 3 && (
             <CompleteStep
               airportCode={selectedAirport}
-              programCount={selectedPrograms.length}
+              programCount={programBalances.length}
               onFinish={handleFinish}
             />
           )}

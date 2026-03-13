@@ -2,10 +2,12 @@
 
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { POINTS_PROGRAMS, type PointsProgram } from "./airports";
+import type { ProgramBalance } from "@/lib/userProfile";
 
 interface ProgramsStepProps {
-  selectedPrograms: string[];
+  programBalances: ProgramBalance[];
   onToggle: (id: string) => void;
+  onBalanceChange: (id: string, balance: number) => void;
   onNext: () => void;
   onBack: () => void;
 }
@@ -20,12 +22,14 @@ const CATEGORIES: {
 ];
 
 export function ProgramsStep({
-  selectedPrograms,
+  programBalances,
   onToggle,
+  onBalanceChange,
   onNext,
   onBack,
 }: ProgramsStepProps) {
-  const hasSelections = selectedPrograms.length > 0;
+  const hasSelections = programBalances.length > 0;
+  const selectedIds = new Set(programBalances.map((p) => p.programId));
 
   return (
     <div className="flex flex-col min-h-screen px-6 py-12">
@@ -52,7 +56,7 @@ export function ProgramsStep({
           className="animate-fade-in-up text-text-secondary text-center mt-2 mb-8"
           style={{ animationDelay: "0.1s" }}
         >
-          Select all that apply. You can always add more later.
+          Select your programs and enter your balances for personalized results.
         </p>
 
         {/* Categories */}
@@ -70,14 +74,24 @@ export function ProgramsStep({
                   {cat.label}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {programs.map((program) => (
-                    <ProgramCard
-                      key={program.id}
-                      program={program}
-                      selected={selectedPrograms.includes(program.id)}
-                      onToggle={() => onToggle(program.id)}
-                    />
-                  ))}
+                  {programs.map((program) => {
+                    const selected = selectedIds.has(program.id);
+                    const balance =
+                      programBalances.find((p) => p.programId === program.id)
+                        ?.balance ?? 0;
+                    return (
+                      <ProgramCard
+                        key={program.id}
+                        program={program}
+                        selected={selected}
+                        balance={balance}
+                        onToggle={() => onToggle(program.id)}
+                        onBalanceChange={(val) =>
+                          onBalanceChange(program.id, val)
+                        }
+                      />
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -103,17 +117,19 @@ export function ProgramsStep({
 function ProgramCard({
   program,
   selected,
+  balance,
   onToggle,
+  onBalanceChange,
 }: {
   program: PointsProgram;
   selected: boolean;
+  balance: number;
   onToggle: () => void;
+  onBalanceChange: (val: number) => void;
 }) {
   return (
-    <button
-      onClick={onToggle}
-      aria-pressed={selected}
-      className={`relative flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer text-center ${
+    <div
+      className={`relative flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 transition-all duration-200 text-center ${
         selected
           ? "border-coral bg-coral/5 shadow-sm"
           : "border-navy/8 bg-white hover:border-navy/20"
@@ -126,21 +142,48 @@ function ProgramCard({
         </div>
       )}
 
-      {/* Icon circle */}
-      <div
-        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-        style={{ backgroundColor: program.color }}
+      {/* Clickable area for toggling */}
+      <button
+        onClick={onToggle}
+        className="flex flex-col items-center gap-2.5 cursor-pointer w-full"
       >
-        {program.iconLetter}
-      </div>
+        {/* Icon circle */}
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+          style={{ backgroundColor: program.color }}
+        >
+          {program.iconLetter}
+        </div>
 
-      {/* Name */}
-      <div>
-        <p className="text-sm font-semibold text-navy">{program.shortName}</p>
-        <p className="text-xs text-text-muted mt-0.5 leading-tight">
-          {program.name}
-        </p>
-      </div>
-    </button>
+        {/* Name */}
+        <div>
+          <p className="text-sm font-semibold text-navy">
+            {program.shortName}
+          </p>
+          <p className="text-xs text-text-muted mt-0.5 leading-tight">
+            {program.name}
+          </p>
+        </div>
+      </button>
+
+      {/* Balance input (shown when selected) */}
+      {selected && (
+        <div className="w-full mt-1">
+          <input
+            type="number"
+            inputMode="numeric"
+            placeholder="Balance"
+            value={balance || ""}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const val = parseInt(e.target.value) || 0;
+              onBalanceChange(val);
+            }}
+            className="w-full text-center text-sm font-medium text-navy bg-white border border-navy/15 rounded-lg px-2 py-1.5 outline-none focus:border-coral transition-colors"
+          />
+          <p className="text-[10px] text-text-muted mt-1">points/miles</p>
+        </div>
+      )}
+    </div>
   );
 }
