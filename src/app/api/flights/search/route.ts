@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchFlights } from "@/lib/amadeus";
-import { transformAmadeusToFlightResults } from "@/lib/transformFlights";
+import { aggregateFlights } from "@/lib/providers/aggregator";
 import { mockFlights } from "@/components/search/mockFlights";
+import { isScraperAvailable, requestScrape } from "@/lib/scraper/client";
+import { getCachedAward } from "@/lib/scraper/cache";
+import { SCRAPABLE_CARRIERS, type ScrapableCarrier } from "@/lib/scraper/types";
+import type { CabinClass } from "@/lib/providers/types";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -19,16 +22,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // If no Amadeus credentials, return mock data
-  if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
-    return NextResponse.json({
-      flights: mockFlights,
-      meta: { origin, destination, date, cabin, passengers, source: "mock" },
-    });
-  }
-
   try {
-    const offers = await searchFlights({
+    const { flights, sources } = await aggregateFlights({
       origin,
       destination,
       date,
@@ -36,7 +31,7 @@ export async function GET(request: NextRequest) {
       passengers,
     });
 
-    if (offers.length === 0) {
+    if (flights.length === 0) {
       return NextResponse.json({
         flights: [],
         meta: {
@@ -45,13 +40,31 @@ export async function GET(request: NextRequest) {
           date,
           cabin,
           passengers,
-          source: "amadeus",
+          source: sources.join("+") || "none",
           count: 0,
         },
       });
     }
 
-    const flights = transformAmadeusToFlightResults(offers, cabin);
+    // Fire async scrape requests for airlines that support live scraping
+    const scrapeJobs: Record<string, string> = {};
+    if (isScraperAvailable()) {
+      // Don't await — fire and forget, client will poll
+      Promise.all(
+        SCRAPABLE_CARRIERS.map(async (carrier: ScrapableCarrier) => {
+          const cached = await getCachedAward(carrier, origin, destination, date, cabin);
+          if (cached?.fresh) return; // Already have fresh data
+          const jobId = await requestScrape({
+            carrier,
+            origin,
+            destination,
+            date,
+            cabin: cabin as CabinClass,
+          });
+          if (jobId) scrapeJobs[carrier] = jobId;
+        }),
+      ).catch((err) => console.error("[search] Scrape trigger error:", err));
+    }
 
     return NextResponse.json({
       flights,
@@ -61,8 +74,9 @@ export async function GET(request: NextRequest) {
         date,
         cabin,
         passengers,
-        source: "amadeus",
+        source: sources.join("+") || "none",
         count: flights.length,
+        ...(Object.keys(scrapeJobs).length > 0 && { scrapeJobs }),
       },
     });
   } catch (error) {

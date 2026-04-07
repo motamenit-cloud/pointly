@@ -89,6 +89,7 @@ function SearchResultsContent() {
   const [source, setSource] = useState("");
   const [activeSort, setActiveSort] = useState<SortValue>("picks");
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [scrapingCarriers, setScrapingCarriers] = useState<Set<string>>(new Set());
 
   // Load user profile on mount
   useEffect(() => {
@@ -97,6 +98,7 @@ function SearchResultsContent() {
 
   useEffect(() => {
     setLoading(true);
+    setScrapingCarriers(new Set());
     const params = new URLSearchParams({
       origin,
       destination,
@@ -112,6 +114,15 @@ function SearchResultsContent() {
         setPersonalizedFlights(personalizeResults(rawFlights, profile));
         setSource(data.meta?.source || "");
         setLoading(false);
+
+        // Start polling for live scrape results if available
+        const scrapeJobs = data.meta?.scrapeJobs as
+          | Record<string, string>
+          | undefined;
+        if (scrapeJobs && Object.keys(scrapeJobs).length > 0) {
+          setScrapingCarriers(new Set(Object.keys(scrapeJobs)));
+          pollScrapeJobs(scrapeJobs, rawFlights);
+        }
       })
       .catch(() => {
         setFlights([]);
@@ -119,6 +130,113 @@ function SearchResultsContent() {
         setLoading(false);
       });
   }, [origin, destination, date, cabin, passengers, profile]);
+
+  /** Poll scraper worker for live results, merge into flight list. */
+  function pollScrapeJobs(
+    jobs: Record<string, string>,
+    currentFlights: FlightResult[],
+  ) {
+    const pending = new Map(Object.entries(jobs));
+    let updatedFlights = [...currentFlights];
+    const startTime = Date.now();
+    const POLL_INTERVAL = 3000;
+    const MAX_POLL_TIME = 30000;
+
+    const poll = () => {
+      if (pending.size === 0 || Date.now() - startTime > MAX_POLL_TIME) {
+        setScrapingCarriers(new Set());
+        return;
+      }
+
+      Promise.all(
+        Array.from(pending.entries()).map(async ([carrier, jobId]) => {
+          try {
+            const res = await fetch(
+              `/api/scrape/status?jobId=${encodeURIComponent(jobId)}`,
+            );
+            if (!res.ok) return;
+            const job = await res.json();
+
+            if (job.status === "complete" && job.results?.length) {
+              pending.delete(carrier);
+              // Merge live results: replace estimate for this carrier
+              updatedFlights = mergeLiveResults(
+                updatedFlights,
+                carrier,
+                job.results,
+              );
+              setFlights([...updatedFlights]);
+              setPersonalizedFlights(
+                personalizeResults(updatedFlights, profile),
+              );
+              setScrapingCarriers((prev) => {
+                const next = new Set(prev);
+                next.delete(carrier);
+                return next;
+              });
+            } else if (job.status === "failed") {
+              pending.delete(carrier);
+              setScrapingCarriers((prev) => {
+                const next = new Set(prev);
+                next.delete(carrier);
+                return next;
+              });
+            }
+          } catch {
+            // Ignore individual poll errors, keep trying
+          }
+        }),
+      ).then(() => {
+        if (pending.size > 0 && Date.now() - startTime < MAX_POLL_TIME) {
+          setTimeout(poll, POLL_INTERVAL);
+        } else {
+          setScrapingCarriers(new Set());
+        }
+      });
+    };
+
+    setTimeout(poll, POLL_INTERVAL);
+  }
+
+  /** Replace estimated results for a carrier with live scraped data. */
+  function mergeLiveResults(
+    currentFlights: FlightResult[],
+    carrier: string,
+    liveResults: Array<{
+      mileageCost: number;
+      sourceName: string;
+      remainingSeats?: number;
+    }>,
+  ): FlightResult[] {
+    if (!liveResults.length) return currentFlights;
+
+    // Find the best (lowest) live result
+    const best = liveResults.reduce((min, r) =>
+      r.mileageCost < min.mileageCost ? r : min,
+    );
+
+    return currentFlights.map((flight) => {
+      // Match by carrier code in the flight ID or airline name
+      const isMatch =
+        flight.id?.includes(carrier) ||
+        flight.transferOptions?.some((opt) =>
+          opt.program
+            ?.toLowerCase()
+            .includes(best.sourceName.toLowerCase()),
+        );
+
+      if (!isMatch) return flight;
+
+      return {
+        ...flight,
+        bestPoints: best.mileageCost,
+        isEstimated: false,
+        dataSource: "live",
+        remainingSeats: best.remainingSeats,
+        awardSource: best.sourceName,
+      };
+    });
+  }
 
   /* Sort logic */
   const flightsToSort = profile?.programs.length ? personalizedFlights : flights;
@@ -224,8 +342,11 @@ function SearchResultsContent() {
                 {loading
                   ? `Finding best points deals for ${originCity} → ${destCity}`
                   : `Showing best points deals for ${originCity} → ${destCity}`}
-                {source && source !== "amadeus" && !loading && (
+                {source && !source.includes("amadeus") && !source.includes("airline_agents") && !source.includes("seats_aero") && !loading && (
                   <span className="ml-1 text-xs text-navy/40">(sample data)</span>
+                )}
+                {scrapingCarriers.size > 0 && (
+                  <span className="ml-1 text-xs text-violet-500 animate-pulse">· Checking live prices...</span>
                 )}
               </p>
             </div>
@@ -339,6 +460,7 @@ function SearchResultsContent() {
 
                 {sorted.map((flight) => {
                   const pf = flight as PersonalizedFlight;
+                  const isLiveScraping = scrapingCarriers.has(flight.airlineCode);
                   return (
                     <FlightResultCard
                       key={flight.id}
@@ -349,6 +471,7 @@ function SearchResultsContent() {
                       userProgramName={pf.userProgramName}
                       userProgramFullName={pf.userProgramFullName}
                       userBalance={pf.userBalance}
+                      isLiveScraping={isLiveScraping}
                     />
                   );
                 })}

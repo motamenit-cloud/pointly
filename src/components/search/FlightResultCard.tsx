@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Star, Zap, ArrowRight, CheckCircle, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Star, Zap, ArrowRight, CheckCircle, TrendingUp, ShieldCheck, Users } from "lucide-react";
 import { AirlineLogo } from "./AirlineLogo";
 
 /* ── Types ── */
@@ -11,6 +11,8 @@ export interface TransferOption {
   transferFrom?: string;
   transferRatio?: string;
   badge?: "best" | "fastest";
+  /** Whether this points cost is an estimate (CPP-based) or real award data. */
+  isEstimated?: boolean;
 }
 
 export interface FlightResult {
@@ -33,6 +35,14 @@ export interface FlightResult {
   cashTax: number;
   badge?: "best-deal" | "lowest-points" | "fastest";
   transferOptions: TransferOption[];
+  /** Data source(s) that produced this result. */
+  dataSource?: "amadeus" | "seats_aero" | "both" | "mock" | "live";
+  /** Whether the points cost is an estimate or real award availability. */
+  isEstimated?: boolean;
+  /** Remaining award seats (from Seats.aero). */
+  remainingSeats?: number;
+  /** The mileage program source for the award (e.g. "united"). */
+  awardSource?: string;
 }
 
 /* ── Badge component ── */
@@ -101,6 +111,7 @@ export function FlightResultCard({
   userProgramName,
   userProgramFullName,
   userBalance,
+  isLiveScraping,
 }: {
   flight: FlightResult;
   personalBadge?: "can-book" | "best-for-you" | "almost-there";
@@ -109,6 +120,8 @@ export function FlightResultCard({
   userProgramName?: string;
   userProgramFullName?: string;
   userBalance?: number;
+  /** Whether a live scrape is in progress for this card's airline. */
+  isLiveScraping?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -148,6 +161,12 @@ export function FlightResultCard({
                   {flight.flightNumber}
                 </span>
                 {flight.badge && <ResultBadge type={flight.badge} />}
+                {flight.isEstimated === false && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">
+                    <ShieldCheck size={12} />
+                    Real availability
+                  </span>
+                )}
                 {personalBadge && <PersonalBadge type={personalBadge} pointsGap={pointsGap} />}
               </div>
 
@@ -195,12 +214,23 @@ export function FlightResultCard({
           <div className="flex items-center gap-4 md:gap-6 md:pl-6 md:border-l md:border-navy/8">
             <div className="text-right md:text-right">
               <p className="text-xs text-text-muted mb-0.5">From</p>
-              <p className="text-2xl font-bold text-navy leading-tight">
+              <p className={`text-2xl font-bold text-navy leading-tight transition-opacity duration-500 ${isLiveScraping ? "animate-pulse" : ""}`}>
                 {flight.bestPoints.toLocaleString()}
               </p>
               <p className="text-xs text-text-muted">
-                pts + ${flight.cashTax} tax
+                pts{flight.cashTax > 0 ? ` + $${flight.cashTax} tax` : ""}
               </p>
+              {isLiveScraping && (
+                <p className="text-xs text-violet-500 font-medium mt-0.5 animate-pulse">
+                  Checking live prices...
+                </p>
+              )}
+              {flight.remainingSeats != null && flight.remainingSeats > 0 && flight.remainingSeats <= 9 && (
+                <p className="text-xs text-amber-600 font-medium flex items-center gap-1 mt-0.5">
+                  <Users size={10} />
+                  {flight.remainingSeats} seat{flight.remainingSeats !== 1 ? "s" : ""} left
+                </p>
+              )}
             </div>
 
             <button
@@ -272,6 +302,11 @@ export function FlightResultCard({
                         <p className="text-xs text-text-muted">
                           Transfer from {opt.transferFrom}
                           {opt.transferRatio && ` (${opt.transferRatio})`}
+                        </p>
+                      )}
+                      {opt.isEstimated && (
+                        <p className="text-xs text-text-muted/70 italic">
+                          Estimated
                         </p>
                       )}
                       {isUserProgram && affordable && userBalance !== undefined && (
