@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { GoogleButton } from "@/components/ui/GoogleButton";
+import { saveUserAccount } from "@/lib/userProfile";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function SignUpPage() {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    // Simulate account creation — replace with real auth provider
+    saveUserAccount({ name: name.trim(), email: email.trim(), signedIn: true });
     setTimeout(() => {
       router.push("/onboarding");
     }, 800);
@@ -41,7 +42,7 @@ export default function SignUpPage() {
 
   function handleGoogleSignUp() {
     setLoading(true);
-    // Replace with real Google OAuth flow
+    saveUserAccount({ name: "Google User", email: "", signedIn: true });
     setTimeout(() => {
       router.push("/onboarding");
     }, 800);

@@ -65,24 +65,27 @@ export interface PointsProgram {
   category: "credit-card" | "airline" | "hotel";
   color: string;
   iconLetter: string;
+  /** IATA code for airlines (used by avs.io CDN), or logo URL for non-airlines. */
+  logoCode?: string;
+  logoUrl?: string;
 }
 
 export const POINTS_PROGRAMS: PointsProgram[] = [
-  // Credit card programs
-  { id: "chase-ur", name: "Chase Ultimate Rewards", shortName: "Chase UR", category: "credit-card", color: "#0A3D91", iconLetter: "C" },
-  { id: "amex-mr", name: "Amex Membership Rewards", shortName: "Amex MR", category: "credit-card", color: "#006FCF", iconLetter: "A" },
-  { id: "citi-ty", name: "Citi ThankYou Points", shortName: "Citi TY", category: "credit-card", color: "#003B70", iconLetter: "C" },
-  { id: "cap1-miles", name: "Capital One Miles", shortName: "Cap One", category: "credit-card", color: "#D03027", iconLetter: "C" },
-  { id: "bilt", name: "Bilt Rewards", shortName: "Bilt", category: "credit-card", color: "#000000", iconLetter: "B" },
-  // Airline programs
-  { id: "united-mp", name: "United MileagePlus", shortName: "United", category: "airline", color: "#002244", iconLetter: "U" },
-  { id: "aa-advantage", name: "American AAdvantage", shortName: "AAdvantage", category: "airline", color: "#B6322D", iconLetter: "A" },
-  { id: "delta-sm", name: "Delta SkyMiles", shortName: "Delta", category: "airline", color: "#003366", iconLetter: "D" },
-  { id: "sw-rr", name: "Southwest Rapid Rewards", shortName: "Southwest", category: "airline", color: "#304CB2", iconLetter: "S" },
-  { id: "alaska-mp", name: "Alaska Mileage Plan", shortName: "Alaska", category: "airline", color: "#01426A", iconLetter: "A" },
+  // Credit card programs (most popular first)
+  { id: "amex-mr", name: "Amex Membership Rewards", shortName: "Amex Platinum", category: "credit-card", color: "#006FCF", iconLetter: "A", logoUrl: "/images/programs/amex.svg" },
+  { id: "cap1-miles", name: "Capital One Miles", shortName: "Capital One", category: "credit-card", color: "#D03027", iconLetter: "C", logoUrl: "/images/programs/capitalone.svg" },
+  { id: "bilt", name: "Bilt Rewards", shortName: "Bilt", category: "credit-card", color: "#000000", iconLetter: "B", logoUrl: "/images/programs/bilt.svg" },
+  { id: "chase-ur", name: "Chase Ultimate Rewards", shortName: "Chase UR", category: "credit-card", color: "#0A3D91", iconLetter: "C", logoUrl: "/images/programs/chase.svg" },
+  { id: "citi-ty", name: "Citi ThankYou Points", shortName: "Citi TY", category: "credit-card", color: "#003B70", iconLetter: "C", logoUrl: "/images/programs/citi.svg" },
+  // Airline programs (use IATA code for avs.io CDN)
+  { id: "united-mp", name: "United MileagePlus", shortName: "United", category: "airline", color: "#002244", iconLetter: "U", logoCode: "UA" },
+  { id: "aa-advantage", name: "American AAdvantage", shortName: "AAdvantage", category: "airline", color: "#B6322D", iconLetter: "A", logoCode: "AA" },
+  { id: "delta-sm", name: "Delta SkyMiles", shortName: "Delta", category: "airline", color: "#003366", iconLetter: "D", logoCode: "DL" },
+  { id: "sw-rr", name: "Southwest Rapid Rewards", shortName: "Southwest", category: "airline", color: "#304CB2", iconLetter: "S", logoCode: "WN" },
+  { id: "alaska-mp", name: "Alaska Mileage Plan", shortName: "Alaska", category: "airline", color: "#01426A", iconLetter: "A", logoCode: "AS" },
   // Hotel programs
-  { id: "marriott-bonvoy", name: "Marriott Bonvoy", shortName: "Marriott", category: "hotel", color: "#862633", iconLetter: "M" },
-  { id: "hilton-honors", name: "Hilton Honors", shortName: "Hilton", category: "hotel", color: "#104C97", iconLetter: "H" },
-  { id: "hyatt-woh", name: "World of Hyatt", shortName: "Hyatt", category: "hotel", color: "#C7A259", iconLetter: "H" },
-  { id: "ihg-rewards", name: "IHG One Rewards", shortName: "IHG", category: "hotel", color: "#006341", iconLetter: "I" },
+  { id: "marriott-bonvoy", name: "Marriott Bonvoy", shortName: "Marriott", category: "hotel", color: "#862633", iconLetter: "M", logoUrl: "/images/programs/marriott.svg" },
+  { id: "hilton-honors", name: "Hilton Honors", shortName: "Hilton", category: "hotel", color: "#104C97", iconLetter: "H", logoUrl: "/images/programs/hilton.svg" },
+  { id: "hyatt-woh", name: "World of Hyatt", shortName: "Hyatt", category: "hotel", color: "#C7A259", iconLetter: "H", logoUrl: "/images/programs/hyatt.svg" },
+  { id: "ihg-rewards", name: "IHG One Rewards", shortName: "IHG", category: "hotel", color: "#006341", iconLetter: "I", logoUrl: "/images/programs/ihg.svg" },
 ];

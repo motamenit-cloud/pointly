@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { GoogleButton } from "@/components/ui/GoogleButton";
+import { saveUserAccount } from "@/lib/userProfile";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -29,7 +30,9 @@ export default function SignInPage() {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    // Simulate sign in — replace with real auth provider
+    const namePart = email.split("@")[0].replace(/[^a-zA-Z]/g, " ").trim();
+    const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    saveUserAccount({ name: displayName, email: email.trim(), signedIn: true });
     setTimeout(() => {
       router.push("/");
     }, 800);
@@ -37,7 +40,7 @@ export default function SignInPage() {
 
   function handleGoogleSignIn() {
     setLoading(true);
-    // Replace with real Google OAuth flow
+    saveUserAccount({ name: "Google User", email: "", signedIn: true });
     setTimeout(() => {
       router.push("/");
     }, 800);

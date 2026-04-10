@@ -1,8 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { POINTS_PROGRAMS, type PointsProgram } from "./airports";
 import type { ProgramBalance } from "@/lib/userProfile";
+
+function formatWithCommas(n: number): string {
+  return n.toLocaleString("en-US");
+}
+
+function parseCommaNumber(s: string): number {
+  return parseInt(s.replace(/,/g, "")) || 0;
+}
 
 interface ProgramsStepProps {
   programBalances: ProgramBalance[];
@@ -113,6 +122,49 @@ export function ProgramsStep({
   );
 }
 
+/* ── Program logo ── */
+function ProgramLogo({
+  program,
+  size = 40,
+}: {
+  program: PointsProgram;
+  size?: number;
+}) {
+  const [imgError, setImgError] = useState(false);
+
+  // Determine logo source: airline uses avs.io CDN, others use local SVGs
+  const src = program.logoCode
+    ? `https://pics.avs.io/${size * 2}/${size * 2}/${program.logoCode}.png`
+    : program.logoUrl || null;
+
+  if (!src || imgError) {
+    return (
+      <div
+        className="rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+        style={{ width: size, height: size, backgroundColor: program.color }}
+      >
+        {program.iconLetter}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="shrink-0 rounded-xl overflow-hidden flex items-center justify-center bg-white"
+      style={{ width: size, height: size }}
+    >
+      <img
+        src={src}
+        alt={`${program.shortName} logo`}
+        width={size}
+        height={size}
+        onError={() => setImgError(true)}
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+}
+
 /* ── Program card ── */
 function ProgramCard({
   program,
@@ -147,13 +199,8 @@ function ProgramCard({
         onClick={onToggle}
         className="flex flex-col items-center gap-2.5 cursor-pointer w-full"
       >
-        {/* Icon circle */}
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-          style={{ backgroundColor: program.color }}
-        >
-          {program.iconLetter}
-        </div>
+        {/* Logo */}
+        <ProgramLogo program={program} size={40} />
 
         {/* Name */}
         <div>
@@ -170,13 +217,13 @@ function ProgramCard({
       {selected && (
         <div className="w-full mt-1">
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             placeholder="Balance"
-            value={balance || ""}
+            value={balance ? formatWithCommas(balance) : ""}
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
-              const val = parseInt(e.target.value) || 0;
+              const val = parseCommaNumber(e.target.value);
               onBalanceChange(val);
             }}
             className="w-full text-center text-sm font-medium text-navy bg-white border border-navy/15 rounded-lg px-2 py-1.5 outline-none focus:border-coral transition-colors"
