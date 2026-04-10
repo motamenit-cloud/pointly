@@ -1,7 +1,6 @@
 const footerLinks = [
   { label: "Home", href: "#" },
   { label: "Explore", href: "#" },
-  { label: "Help", href: "#" },
   { label: "My Wallet", href: "#" },
 ];
 

@@ -12,6 +12,23 @@ import { deltaAgent } from "./deltaAgent";
 import { unitedAgent } from "./unitedAgent";
 import { jetblueAgent } from "./jetblueAgent";
 import { southwestAgent } from "./southwestAgent";
+import { alaskaAgent } from "./alaskaAgent";
+import { hawaiianAgent } from "./hawaiianAgent";
+import { baAgent } from "./baAgent";
+import { lufthansaAgent } from "./lufthansaAgent";
+import { emiratesAgent } from "./emiratesAgent";
+import { singaporeAgent } from "./singaporeAgent";
+import { anaAgent } from "./anaAgent";
+import { cathayAgent } from "./cathayAgent";
+import { jalAgent } from "./jalAgent";
+import { koreanAgent } from "./koreanAgent";
+import { thaiAgent } from "./thaiAgent";
+import { evaAgent } from "./evaAgent";
+import { latamAgent } from "./latamAgent";
+import { aviancaAgent } from "./aviancaAgent";
+import { copaAgent } from "./copaAgent";
+import { aeromexicoAgent } from "./aeromexicoAgent";
+import { golAgent } from "./golAgent";
 
 /** All registered airline agents. Add new agents here. */
 const AGENTS: AirlineAgent[] = [
@@ -20,6 +37,23 @@ const AGENTS: AirlineAgent[] = [
   unitedAgent,
   jetblueAgent,
   southwestAgent,
+  alaskaAgent,
+  hawaiianAgent,
+  baAgent,
+  lufthansaAgent,
+  emiratesAgent,
+  singaporeAgent,
+  anaAgent,
+  cathayAgent,
+  jalAgent,
+  koreanAgent,
+  thaiAgent,
+  evaAgent,
+  latamAgent,
+  aviancaAgent,
+  copaAgent,
+  aeromexicoAgent,
+  golAgent,
 ];
 
 /**

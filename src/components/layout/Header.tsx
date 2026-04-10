@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 const navLinks = [
   { label: "Home", href: "#" },
   { label: "Explore", href: "#" },
-  { label: "Help", href: "#" },
   { label: "My Wallet", href: "#" },
 ];
 
@@ -33,10 +32,18 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden md:block">
-          <Button variant="primary" size="md">
+        <div className="hidden md:flex items-center gap-3">
+          <a
+            href="/signin"
+            className="text-sm font-medium text-navy hover:text-coral transition-colors"
+          >
             Log In
-          </Button>
+          </a>
+          <a href="/signup">
+            <Button variant="primary" size="md">
+              Sign Up
+            </Button>
+          </a>
         </div>
 
         <button
@@ -59,10 +66,18 @@ export function Header() {
               {link.label}
             </a>
           ))}
-          <div className="pt-2">
-            <Button variant="primary" size="md" className="w-full">
+          <div className="pt-2 space-y-2">
+            <a href="/signup">
+              <Button variant="primary" size="md" className="w-full">
+                Sign Up
+              </Button>
+            </a>
+            <a
+              href="/signin"
+              className="block text-center text-sm font-medium text-navy hover:text-coral transition-colors py-2"
+            >
               Log In
-            </Button>
+            </a>
           </div>
         </div>
       )}

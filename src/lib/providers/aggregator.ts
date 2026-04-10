@@ -58,9 +58,14 @@ export async function aggregateFlights(
   if (awardResults.length > 0) {
     // Check which award providers contributed
     const awardSources = new Set(awardResults.map((a) => a.source));
-    if (awardSources.has("united") || awardSources.has("aa") || awardSources.has("delta") ||
-        awardSources.has("jetblue") || awardSources.has("southwest")) {
-      sources.push("airline_agents");
+    const agentSources = new Set(["united", "aa", "delta", "jetblue", "southwest",
+      "alaska", "hawaiian", "ba", "lufthansa", "emirates", "singapore", "ana", "cathay",
+      "jal", "korean", "thai", "eva", "latam", "avianca", "copa", "aeromexico", "smiles"]);
+    for (const src of awardSources) {
+      if (agentSources.has(src)) {
+        sources.push("airline_agents");
+        break;
+      }
     }
     // Check for seats.aero sources (they use program names like "united", "aeroplan" too,
     // but also have unique ones like "aeroplan", "flyingblue", etc.)
