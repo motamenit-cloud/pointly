@@ -5,10 +5,13 @@ import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
   getUserAccount,
+  getUserProfile,
   getTotalPoints,
   signOut,
   type UserAccount,
+  type ProgramBalance,
 } from "@/lib/userProfile";
+import { POINTS_PROGRAMS } from "@/components/onboarding/airports";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -25,13 +28,18 @@ function formatPoints(n: number): string {
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [pointsOpen, setPointsOpen] = useState(false);
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [programs, setPrograms] = useState<ProgramBalance[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pointsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setAccount(getUserAccount());
     setTotalPoints(getTotalPoints());
+    const profile = getUserProfile();
+    if (profile) setPrograms(profile.programs);
   }, []);
 
   // Close dropdown on outside click
@@ -43,6 +51,12 @@ export function Header() {
       ) {
         setDropdownOpen(false);
       }
+      if (
+        pointsRef.current &&
+        !pointsRef.current.contains(e.target as Node)
+      ) {
+        setPointsOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -53,6 +67,16 @@ export function Header() {
     setAccount(null);
     setDropdownOpen(false);
     window.location.href = "/";
+  }
+
+  function getProgramName(id: string): string {
+    const p = POINTS_PROGRAMS.find((pp) => pp.id === id);
+    return p ? p.shortName : id;
+  }
+
+  function getProgramColor(id: string): string {
+    const p = POINTS_PROGRAMS.find((pp) => pp.id === id);
+    return p ? p.color : "#64748b";
   }
 
   const initials = account
@@ -87,17 +111,60 @@ export function Header() {
         <div className="hidden md:flex items-center gap-3">
           {account?.signedIn ? (
             <div className="relative" ref={dropdownRef}>
+              {/* Points badge with breakdown */}
+              {totalPoints > 0 && (
+                <div className="relative" ref={pointsRef}>
+                  <button
+                    onClick={() => { setPointsOpen(!pointsOpen); setDropdownOpen(false); }}
+                    className="text-xs font-semibold text-coral bg-coral/10 px-2.5 py-1 rounded-pill cursor-pointer hover:bg-coral/15 transition-colors"
+                  >
+                    {formatPoints(totalPoints)} pts
+                  </button>
+
+                  {pointsOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-navy/10 shadow-lg py-3 animate-scale-in z-50">
+                      <p className="px-4 pb-2 text-xs font-semibold text-text-muted uppercase tracking-wide">
+                        Points Breakdown
+                      </p>
+                      <div className="space-y-1">
+                        {programs
+                          .filter((p) => p.balance > 0)
+                          .sort((a, b) => b.balance - a.balance)
+                          .map((p) => (
+                            <div
+                              key={p.programId}
+                              className="flex items-center justify-between px-4 py-1.5 hover:bg-sky-light/50 transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: getProgramColor(p.programId) }}
+                                />
+                                <span className="text-sm text-navy">
+                                  {getProgramName(p.programId)}
+                                </span>
+                              </div>
+                              <span className="text-sm font-semibold text-navy">
+                                {p.balance.toLocaleString("en-US")}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                      <div className="mt-2 pt-2 mx-4 border-t border-navy/5 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-text-muted">Total</span>
+                        <span className="text-sm font-bold text-coral">
+                          {totalPoints.toLocaleString("en-US")}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+                onClick={() => { setDropdownOpen(!dropdownOpen); setPointsOpen(false); }}
                 className="flex items-center gap-2.5 cursor-pointer rounded-pill px-3 py-1.5 hover:bg-navy/5 transition-colors"
               >
-                {/* Points badge */}
-                {totalPoints > 0 && (
-                  <span className="text-xs font-semibold text-coral bg-coral/10 px-2.5 py-1 rounded-pill">
-                    {formatPoints(totalPoints)} pts
-                  </span>
-                )}
-
                 {/* Avatar */}
                 <div className="w-8 h-8 rounded-full bg-navy flex items-center justify-center">
                   <span className="text-xs font-bold text-white">
@@ -207,6 +274,35 @@ export function Header() {
                     )}
                   </div>
                 </div>
+                {programs.filter((p) => p.balance > 0).length > 0 && (
+                  <div className="border-t border-navy/5 pt-2 pb-1 space-y-1">
+                    <p className="text-xs font-semibold text-text-muted uppercase tracking-wide px-1">
+                      Points Breakdown
+                    </p>
+                    {programs
+                      .filter((p) => p.balance > 0)
+                      .sort((a, b) => b.balance - a.balance)
+                      .map((p) => (
+                        <div
+                          key={p.programId}
+                          className="flex items-center justify-between px-1 py-1"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: getProgramColor(p.programId) }}
+                            />
+                            <span className="text-sm text-navy">
+                              {getProgramName(p.programId)}
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-navy">
+                            {p.balance.toLocaleString("en-US")}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center justify-center gap-2 text-sm font-medium text-navy hover:text-coral transition-colors py-2 cursor-pointer"
