@@ -1,8 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Star, Zap, ArrowRight, CheckCircle, TrendingUp, ShieldCheck, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Star, Zap, ArrowRight, CheckCircle, TrendingUp, Users, ExternalLink } from "lucide-react";
 import { AirlineLogo } from "./AirlineLogo";
+
+/* ── Portal & booking URLs ── */
+const TRANSFER_PORTAL_URLS: Record<string, string> = {
+  "chase-ur": "https://ultimaterewardspoints.chase.com",
+  "amex-mr": "https://global.americanexpress.com/rewards",
+  "citi-ty": "https://thankyou.citi.com",
+  "cap1-miles": "https://www.capitalone.com/credit-cards/benefits/travel",
+  "bilt": "https://www.biltrewards.com/travel",
+};
+
+const TRANSFER_PORTAL_NAMES: Record<string, string> = {
+  "chase-ur": "Chase UR Portal",
+  "amex-mr": "Amex Rewards",
+  "citi-ty": "Citi ThankYou",
+  "cap1-miles": "Capital One Portal",
+  "bilt": "Bilt Rewards",
+};
+
+const BOOKING_URLS: Record<string, string> = {
+  united: "https://www.united.com/en/us/awardtravel",
+  aa: "https://www.aa.com/booking/find-flights",
+  delta: "https://www.delta.com/flight-search/book-a-flight",
+  southwest: "https://www.southwest.com/air/booking",
+  alaska: "https://www.alaskaair.com/booking/flights",
+  jetblue: "https://www.jetblue.com/booking/flights",
+  ba: "https://www.britishairways.com/travel/redeem",
+  virgin: "https://www.virginatlantic.com/book/flights",
+  "flying-blue": "https://www.flyingblue.com/en/spend/flights",
+  aeroplan: "https://www.aircanada.com/aeroplan",
+  emirates: "https://www.emirates.com/us/english/book",
+  singapore: "https://www.singaporeair.com/en_UK/ppsclub-krisflyer/use-miles",
+  ana: "https://www.ana.co.jp/en/us/amc/award-reservation",
+  cathay: "https://www.cathaypacific.com/cx/en_US/book-a-trip/redeem-flights",
+  turkish: "https://www.turkishairlines.com/en-us/miles-and-smiles",
+  qatar: "https://www.qatarairways.com/en/privilege-club/use-qmiles.html",
+  etihad: "https://www.etihad.com/en-us/guest/flights",
+  avianca: "https://www.lifemiles.com/flight/search",
+  iberia: "https://www.iberia.com/us/avios",
+  hawaiian: "https://www.hawaiianairlines.com/my-account/hawaiianmiles",
+  latam: "https://www.latamairlines.com/us/en/latam-pass",
+  copa: "https://www.copaair.com/en-us/connectmiles",
+  aeromexico: "https://www.aeromexico.com/en-us/club-premier",
+  smiles: "https://www.smiles.com.br/flights",
+};
 
 /* ── Types ── */
 export interface TransferOption {
@@ -13,6 +57,10 @@ export interface TransferOption {
   badge?: "best" | "fastest";
   /** Whether this points cost is an estimate (CPP-based) or real award data. */
   isEstimated?: boolean;
+  /** Credit card program ID (e.g. "chase-ur") for looking up portal URL. */
+  transferFromId?: string;
+  /** Airline program key (e.g. "united") for looking up booking URL. */
+  programKey?: string;
 }
 
 export interface FlightResult {
@@ -161,12 +209,6 @@ export function FlightResultCard({
                   {flight.flightNumber}
                 </span>
                 {flight.badge && <ResultBadge type={flight.badge} />}
-                {flight.isEstimated === false && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">
-                    <ShieldCheck size={12} />
-                    Real availability
-                  </span>
-                )}
                 {personalBadge && <PersonalBadge type={personalBadge} pointsGap={pointsGap} />}
               </div>
 
@@ -259,13 +301,12 @@ export function FlightResultCard({
       {/* ── Expanded: transfer / booking options ── */}
       {expanded && (
         <div className="border-t border-navy/8 bg-cream/50 rounded-b-2xl p-5 md:p-6">
-          <h4 className="text-sm font-bold text-navy mb-3">
-            Booking options
+          <h4 className="text-sm font-bold text-navy mb-4">
+            How to book with points
           </h4>
 
-          <div className="space-y-2.5">
+          <div className="space-y-4">
             {flight.transferOptions.map((opt, i) => {
-              // Check if this option matches the user's program
               const isUserProgram =
                 userProgramName &&
                 (opt.transferFrom?.includes(userProgramName) ||
@@ -275,75 +316,171 @@ export function FlightResultCard({
               const affordable =
                 isUserProgram && userBalance !== undefined && userBalance >= opt.points;
 
+              const portalUrl = opt.transferFromId ? TRANSFER_PORTAL_URLS[opt.transferFromId] : undefined;
+              const portalName = opt.transferFromId ? TRANSFER_PORTAL_NAMES[opt.transferFromId] : undefined;
+              const bookingUrl = opt.programKey ? BOOKING_URLS[opt.programKey] : undefined;
+
+              const hasTransferStep = !!opt.transferFrom;
+
               return (
                 <div
                   key={i}
-                  className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                  className={`rounded-xl border overflow-hidden ${
                     isUserProgram
-                      ? "bg-emerald-50/50 border-emerald-200"
-                      : "bg-white border-navy/6"
+                      ? "border-emerald-200 bg-emerald-50/30"
+                      : "border-navy/8 bg-white"
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        isUserProgram
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-sky-light text-navy"
-                      }`}
-                    >
-                      {isUserProgram ? <CheckCircle size={14} /> : <Star size={14} />}
+                  {/* Header row */}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          isUserProgram
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-sky-light text-navy"
+                        }`}
+                      >
+                        {isUserProgram ? <CheckCircle size={14} /> : <Star size={14} />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-navy truncate">
+                            {opt.program}
+                          </p>
+                          {opt.badge === "best" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/20">
+                              <Star size={10} /> Best
+                            </span>
+                          )}
+                          {isUserProgram && !opt.badge && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Your program
+                            </span>
+                          )}
+                        </div>
+                        {opt.isEstimated && (
+                          <p className="text-xs text-text-muted/70 italic">
+                            Estimated
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-navy truncate">
-                        {opt.program}
+                    <div className="text-right shrink-0">
+                      <p className="text-lg font-bold text-navy">
+                        {opt.points.toLocaleString()}
                       </p>
-                      {opt.transferFrom && (
-                        <p className="text-xs text-text-muted">
-                          Transfer from {opt.transferFrom}
-                          {opt.transferRatio && ` (${opt.transferRatio})`}
-                        </p>
-                      )}
-                      {opt.isEstimated && (
-                        <p className="text-xs text-text-muted/70 italic">
-                          Estimated
-                        </p>
-                      )}
-                      {isUserProgram && affordable && userBalance !== undefined && (
-                        <p className="text-xs text-emerald-600 font-medium">
-                          {(userBalance - opt.points).toLocaleString()} pts remaining after booking
-                        </p>
-                      )}
+                      <p className="text-xs text-text-muted">points needed</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    {opt.badge === "best" && (
-                      <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/20">
-                        <Star size={10} /> Best
-                      </span>
-                    )}
-                    {isUserProgram && !opt.badge && (
-                      <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Your program
-                      </span>
-                    )}
-                    <div className="text-right">
-                      <p className="text-base font-bold text-navy">
-                        {opt.points.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-text-muted">points</p>
+                  {/* Transfer steps */}
+                  <div className="px-4 pb-4">
+                    <div className="bg-cream/80 rounded-lg px-4 py-3 space-y-3">
+                      {hasTransferStep && (
+                        <div className="flex gap-3">
+                          <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 rounded-full bg-navy text-white text-xs font-bold flex items-center justify-center shrink-0">
+                              1
+                            </div>
+                            <div className="w-px flex-1 bg-navy/15 mt-1" />
+                          </div>
+                          <div className="pb-1">
+                            <p className="text-sm font-medium text-navy">
+                              Transfer {opt.points.toLocaleString()} points from {opt.transferFrom}
+                            </p>
+                            <p className="text-xs text-text-muted mt-0.5">
+                              {opt.transferRatio && `${opt.transferRatio} transfer ratio · `}Transfers are usually instant
+                            </p>
+                            {portalUrl && (
+                              <a
+                                href={portalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-coral hover:underline mt-1"
+                              >
+                                Open {portalName}
+                                <ExternalLink size={10} />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-6 h-6 rounded-full bg-navy text-white text-xs font-bold flex items-center justify-center shrink-0">
+                            {hasTransferStep ? "2" : "1"}
+                          </div>
+                          <div className="w-px flex-1 bg-navy/15 mt-1" />
+                        </div>
+                        <div className="pb-1">
+                          <p className="text-sm font-medium text-navy">
+                            Book award flight on {opt.program}
+                          </p>
+                          <p className="text-xs text-text-muted mt-0.5">
+                            Search for {flight.departureAirport} → {flight.arrivalAirport} and select your flight
+                          </p>
+                          {bookingUrl && (
+                            <a
+                              href={bookingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-coral hover:underline mt-1"
+                            >
+                              Search on {opt.program.split(" ")[0]}
+                              <ExternalLink size={10} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-6 h-6 rounded-full bg-coral text-white text-xs font-bold flex items-center justify-center shrink-0">
+                            {hasTransferStep ? "3" : "2"}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-navy">
+                            Pay taxes & fees{flight.cashTax > 0 ? ` (~$${flight.cashTax})` : ""}
+                          </p>
+                          <p className="text-xs text-text-muted mt-0.5">
+                            Paid by credit card at checkout
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <button className="bg-coral text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-coral-dark transition-colors cursor-pointer">
-                      Book
-                    </button>
+
+                    {isUserProgram && affordable && userBalance !== undefined && (
+                      <p className="text-xs text-emerald-600 font-medium mt-2 px-1">
+                        You&apos;ll have {(userBalance - opt.points).toLocaleString()} pts remaining after booking
+                      </p>
+                    )}
+
+                    {/* Book button */}
+                    {bookingUrl ? (
+                      <a
+                        href={bookingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 w-full flex items-center justify-center gap-1.5 bg-coral text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-coral-dark transition-colors cursor-pointer"
+                      >
+                        Book on {opt.program.split(" ")[0]}
+                        <ExternalLink size={14} />
+                      </a>
+                    ) : (
+                      <button className="mt-3 w-full bg-coral text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-coral-dark transition-colors cursor-pointer">
+                        Book Flight
+                      </button>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <p className="mt-3 text-xs text-text-muted">
+          <p className="mt-4 text-xs text-text-muted">
             Points required may vary. Taxes & fees are approximate.
           </p>
         </div>

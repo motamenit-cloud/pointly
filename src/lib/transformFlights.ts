@@ -225,6 +225,7 @@ function buildFlightResult(
           points: award.mileageCost,
           isEstimated: false,
           badge: "best" as const,
+          programKey: award.source,
         },
         ...buildTransferOptions(carrierCode, estimateAwardCost(cash.cashPrice, cabin)).map((opt) => ({
           ...opt,
@@ -295,6 +296,7 @@ function buildAwardOnlyResult(
       points: award.mileageCost,
       isEstimated: false,
       badge: "best" as const,
+      programKey: award.source,
     },
   ];
 

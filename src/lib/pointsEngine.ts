@@ -42,6 +42,8 @@ export function buildTransferOptions(
     points: Math.ceil(pointsCost / p.ratio),
     transferFrom: p.fromName,
     transferRatio: p.ratio === 1.0 ? "1:1" : `${Math.round(1 / p.ratio)}:1`,
+    transferFromId: p.from,
+    programKey: p.to,
   }));
 
   // Sort by points ascending, then deduplicate by transferFrom

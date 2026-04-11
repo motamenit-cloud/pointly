@@ -110,7 +110,7 @@ export function Header() {
         {/* Desktop right section */}
         <div className="hidden md:flex items-center gap-3">
           {account?.signedIn ? (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative flex items-center gap-2" ref={dropdownRef}>
               {/* Points badge with breakdown */}
               {totalPoints > 0 && (
                 <div className="relative" ref={pointsRef}>
