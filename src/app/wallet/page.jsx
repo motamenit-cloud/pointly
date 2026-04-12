@@ -508,6 +508,7 @@ export default function WalletPage() {
         {/* Primary cards row (up to 4) */}
         <div style={{
           display: "flex",
+          justifyContent: "center",
           gap: 20,
           flexWrap: "wrap",
           marginBottom: overflowCards.length > 0 ? 16 : 0,
@@ -519,7 +520,7 @@ export default function WalletPage() {
 
         {/* Overflow row (5th card onwards) */}
         {overflowCards.length > 0 && (
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
             {overflowCards.map((card, i) => (
               <CreditCard key={card.id} card={card} index={primaryCards.length + i} visible={cardsVisible} />
             ))}
