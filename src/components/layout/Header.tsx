@@ -16,7 +16,7 @@ import { POINTS_PROGRAMS } from "@/components/onboarding/airports";
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Explore", href: "#" },
-  { label: "My Wallet", href: "#" },
+  { label: "My Wallet", href: "/wallet" },
 ];
 
 function formatPoints(n: number): string {
