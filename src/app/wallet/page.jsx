@@ -41,11 +41,11 @@ const CARDS = [
     pointsRaw: 87200,
     points: "87,200",
     network: "AMEX",
-    // Realistic Amex Platinum: brushed silver/platinum metallic
-    gradient: "linear-gradient(130deg, #7a8d9e 0%, #9fb3c2 8%, #bdd0dc 18%, #d8e6ee 28%, #c6d6e2 38%, #a8bece 48%, #bfcfdb 58%, #d6e2ea 68%, #b4c6d2 80%, #8ea6b4 90%, #6e8899 100%)",
+    // Realistic Amex Platinum: dark gunmetal silver like the real metal card
+    gradient: "linear-gradient(135deg, #484f58 0%, #5c6572 10%, #6e7a88 20%, #7e8c9c 30%, #8896a6 40%, #808e9e 50%, #6e7c8c 60%, #5c6a7a 70%, #4e5a6a 80%, #424e5c 90%, #3a4450 100%)",
     chipColor: "#c8a832",
-    textColor: "#1a2530",
-    subColor: "rgba(26,37,48,0.5)",
+    textColor: "#e8eef4",
+    subColor: "rgba(232,238,244,0.55)",
     logoEl: "amex",
   },
   // 2nd: Chase Sapphire Preferred
@@ -156,17 +156,10 @@ function NetworkLogo({ type }) {
     );
   }
   if (type === "amex") {
-    // Amex blue box logo
     return (
-      <div style={{
-        background: "rgba(26,37,48,0.55)",
-        borderRadius: 4, padding: "3px 7px",
-        display: "flex", alignItems: "center",
-      }}>
-        <span style={{ fontFamily: "Arial Black, sans-serif", fontSize: 11, fontWeight: 900, color: "#c8d8e8", letterSpacing: 2 }}>
-          AMEX
-        </span>
-      </div>
+      <span style={{ fontFamily: "Arial Black, sans-serif", fontSize: 11, fontWeight: 900, color: "rgba(232,238,244,0.85)", letterSpacing: 2 }}>
+        AMEX
+      </span>
     );
   }
   if (type === "mc") {
@@ -189,10 +182,10 @@ function ProgramIcon({ cardId }) {
     return (
       <div style={{
         width: 34, height: 34, borderRadius: 8,
-        background: "rgba(26,37,48,0.3)",
-        border: "1px solid rgba(200,216,232,0.3)",
+        background: "rgba(255,255,255,0.12)",
+        border: "1px solid rgba(232,238,244,0.25)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 11, fontWeight: 900, color: "#c8d8e8",
+        fontSize: 11, fontWeight: 900, color: "rgba(232,238,244,0.9)",
         letterSpacing: 1, flexShrink: 0,
       }}>MR</div>
     );
@@ -221,49 +214,58 @@ function ProgramIcon({ cardId }) {
 }
 
 /* ─────────────────────────────────────────────
-   Centurion watermark for Amex Platinum
+   Centurion for Amex Platinum — right-facing profile
 ───────────────────────────────────────────── */
 function CenturionWatermark() {
   return (
-    <svg viewBox="0 0 100 160" style={{
-      position: "absolute", right: 6, bottom: 0,
-      height: "88%", opacity: 0.13, pointerEvents: "none",
-    }} fill="#1a2530">
-      {/* Plume/crest */}
-      <path d="M22,6 C30,0 50,0 62,4 C70,8 65,14 50,16 C35,14 25,16 22,6Z" />
-      <rect x="47" y="14" width="6" height="14" rx="2" />
-      {/* Helmet */}
-      <ellipse cx="50" cy="36" rx="22" ry="20" />
-      {/* Cheek guard */}
-      <path d="M28,40 Q24,52 30,58 Q36,55 38,46" />
-      {/* Face opening */}
-      <ellipse cx="52" cy="38" rx="13" ry="14" fill="rgba(200,210,220,0.4)" />
-      {/* Neck */}
-      <rect x="39" y="54" width="16" height="10" rx="3" />
-      {/* Pauldrons */}
-      <path d="M10,64 Q28,58 50,60 Q72,58 90,66 L88,76 Q70,70 50,72 Q30,70 12,76Z" />
-      {/* Breastplate */}
-      <path d="M14,76 L86,76 L82,116 L18,116Z" />
-      {/* Pectoral lines */}
-      <line x1="30" y1="82" x2="70" y2="82" stroke="rgba(200,210,220,0.5)" strokeWidth="1.5" />
-      <line x1="28" y1="92" x2="72" y2="92" stroke="rgba(200,210,220,0.5)" strokeWidth="1.5" />
-      {/* Belt */}
-      <rect x="18" y="114" width="64" height="7" rx="2" />
-      {/* Pteryges (skirt strips) */}
-      {[0,1,2,3,4,5,6].map(i => (
-        <rect key={i} x={20 + i * 9} y="121" width="6" height="16" rx="2" />
+    <svg viewBox="0 0 80 130" style={{
+      position: "absolute", right: 0, bottom: 0,
+      height: "92%", opacity: 0.22, pointerEvents: "none",
+    }} fill="#c8d8e8">
+      {/* ── Plume: tall upward crest, the most iconic Amex feature ── */}
+      <ellipse cx="38" cy="6" rx="5" ry="9" />
+      <path d="M33,12 Q38,8 43,12 L45,22 L31,22 Z" />
+
+      {/* ── Helmet dome ── */}
+      <path d="M16,36 C16,22 24,16 38,16 C52,16 62,22 62,36 C62,48 56,56 38,56 C22,56 16,48 16,36 Z" />
+
+      {/* ── Helmet brim ── */}
+      <path d="M12,44 L64,44 L66,50 L10,50 Z" />
+
+      {/* ── Left cheek guard ── */}
+      <path d="M12,50 Q8,58 10,64 Q16,62 18,56 Z" />
+
+      {/* ── Face visor opening (slightly lighter) ── */}
+      <path d="M26,30 C28,24 34,22 42,26 C50,30 54,38 52,46 C50,52 44,56 38,54 C32,52 24,46 26,36 Z"
+        fill="rgba(40,50,60,0.35)" />
+
+      {/* ── Eye ── */}
+      <circle cx="44" cy="36" r="2.5" fill="rgba(40,50,60,0.5)" />
+
+      {/* ── Nose bridge (profile detail) ── */}
+      <path d="M52,32 L58,38 L54,42" fill="none" stroke="#c8d8e8" strokeWidth="1.8" strokeLinecap="round" />
+
+      {/* ── Neck ── */}
+      <rect x="29" y="56" width="16" height="11" rx="3" />
+
+      {/* ── Pauldrons (shoulder armour) ── */}
+      <path d="M4,67 C12,61 23,63 38,65 C53,63 64,61 74,69 L72,79 C60,73 50,71 38,73 C26,71 16,73 6,79 Z" />
+
+      {/* ── Breastplate / cuirass ── */}
+      <path d="M6,79 L70,79 L66,116 L10,116 Z" />
+
+      {/* ── Muscle-line engravings on breastplate ── */}
+      <path d="M22,87 Q38,83 54,87" fill="none" stroke="rgba(40,50,60,0.4)" strokeWidth="1.5" />
+      <path d="M20,96 Q38,92 56,96" fill="none" stroke="rgba(40,50,60,0.4)" strokeWidth="1.5" />
+      <path d="M36,79 L36,116" fill="none" stroke="rgba(40,50,60,0.3)" strokeWidth="1" />
+
+      {/* ── Belt ── */}
+      <rect x="10" y="114" width="56" height="7" rx="2" />
+
+      {/* ── Pteruges (waist skirt strips) ── */}
+      {[0,1,2,3,4,5,6,7].map(i => (
+        <rect key={i} x={12 + i * 7} y="121" width="5" height="18" rx="2.5" />
       ))}
-      {/* Legs */}
-      <rect x="22" y="137" width="16" height="20" rx="4" />
-      <rect x="62" y="137" width="16" height="20" rx="4" />
-      {/* Sandals */}
-      <ellipse cx="30" cy="159" rx="10" ry="3" />
-      <ellipse cx="70" cy="159" rx="10" ry="3" />
-      {/* Shield */}
-      <ellipse cx="4" cy="96" rx="12" ry="18" opacity="0.7" />
-      {/* Spear */}
-      <rect x="93" y="14" width="3" height="120" rx="1.5" />
-      <polygon points="94.5,4 90,18 99,18" />
     </svg>
   );
 }
