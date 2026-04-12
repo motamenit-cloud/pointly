@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pointly",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["start-dev.js"],
+      "port": 3000
+    }
+  ]
+}
