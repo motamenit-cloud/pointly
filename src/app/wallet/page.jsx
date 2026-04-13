@@ -41,6 +41,17 @@ const CARDS = [
     pointsRaw: 87200,
     points: "87,200",
     network: "AMEX",
+    cpp: 2.0, // cents per point (Membership Rewards travel value)
+    benefits: [
+      "$200 Uber Cash",
+      "$200 Airline Credit",
+      "$200 Hotel Credit",
+      "$100 Saks Credit",
+      "$189 CLEAR Credit",
+      "Centurion Lounge",
+      "Priority Pass",
+      "Global Entry",
+    ],
     // Realistic Amex Platinum: dark gunmetal silver like the real metal card
     gradient: "linear-gradient(135deg, #484f58 0%, #5c6572 10%, #6e7a88 20%, #7e8c9c 30%, #8896a6 40%, #808e9e 50%, #6e7c8c 60%, #5c6a7a 70%, #4e5a6a 80%, #424e5c 90%, #3a4450 100%)",
     chipColor: "#c8a832",
@@ -58,6 +69,15 @@ const CARDS = [
     pointsRaw: 42500,
     points: "42,500",
     network: "VISA",
+    cpp: 2.0, // cents per point (Ultimate Rewards travel value)
+    benefits: [
+      "$50 Hotel Credit",
+      "3x Dining",
+      "3x Travel",
+      "Trip Insurance",
+      "No FX Fees",
+      "Primary Car Rental",
+    ],
     // Realistic Chase Sapphire: rich sapphire blue gem gradient
     gradient: "linear-gradient(145deg, #0a1e58 0%, #152f7a 18%, #1c3f9e 38%, #1a3a92 55%, #0f2568 75%, #07174a 100%)",
     chipColor: "#c8a832",
@@ -75,6 +95,15 @@ const CARDS = [
     pointsRaw: 12840,
     points: "12,840",
     network: "MC",
+    cpp: 1.0, // cents per point (Daily Cash / cashback)
+    benefits: [
+      "3% on Apple",
+      "2% Apple Pay",
+      "1% All Else",
+      "0% Financing",
+      "No Fees Ever",
+      "Daily Cash",
+    ],
     // Realistic Apple Card: pure titanium white
     gradient: "linear-gradient(145deg, #f5f5f7 0%, #ffffff 25%, #eeeeef 55%, #e3e3e5 78%, #d8d8da 100%)",
     chipColor: "#a8a8a8",
@@ -85,6 +114,15 @@ const CARDS = [
 ];
 
 /* ─────────────────────────────────────────────
+   Dollar value helpers
+───────────────────────────────────────────── */
+function formatValue(pointsRaw, cpp) {
+  const dollars = Math.round((pointsRaw * cpp) / 100);
+  if (dollars >= 1000) return `$${(dollars / 1000).toFixed(1)}k`;
+  return `$${dollars.toLocaleString("en-US")}`;
+}
+
+/* ─────────────────────────────────────────────
    Transfer deals data
 ───────────────────────────────────────────── */
 const DEALS = [
@@ -92,10 +130,15 @@ const DEALS = [
     id: "chase-af",
     card: "Chase Sapphire",
     cardColor: "#1a3a6b",
+    cardLogo: "CHASE",
+    cardSub: "ultimate rewards®",
     partner: "Air France / KLM",
     partnerShort: "Flying Blue",
+    partnerColor: "#0057b8",
     bonus: "30% Bonus",
-    description: "Transfer Chase Ultimate Rewards to Flying Blue and get 30% more miles on every transfer.",
+    ptsFrom: 10000,
+    ptsTo: 13000,
+    bg: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=600&q=80", // Paris
     expires: "Apr 30, 2026",
     href: "#",
   },
@@ -103,10 +146,15 @@ const DEALS = [
     id: "amex-ba",
     card: "Amex Platinum",
     cardColor: "#6e8899",
+    cardLogo: "AMEX",
+    cardSub: "membership rewards®",
     partner: "British Airways",
     partnerShort: "Avios",
+    partnerColor: "#075aaa",
     bonus: "25% Bonus",
-    description: "Transfer Amex Membership Rewards to Avios and earn a 25% bonus on all transfers this month.",
+    ptsFrom: 10000,
+    ptsTo: 12500,
+    bg: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&q=80", // London
     expires: "Apr 25, 2026",
     href: "#",
   },
@@ -114,10 +162,15 @@ const DEALS = [
     id: "chase-united",
     card: "Chase Sapphire",
     cardColor: "#1a3a6b",
+    cardLogo: "CHASE",
+    cardSub: "ultimate rewards®",
     partner: "United Airlines",
     partnerShort: "MileagePlus",
+    partnerColor: "#005daa",
     bonus: "2x Transfer",
-    description: "Double your miles — every 1,000 Chase points transfers as 2,000 United MileagePlus miles.",
+    ptsFrom: 10000,
+    ptsTo: 20000,
+    bg: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&q=80", // airplane
     expires: "May 15, 2026",
     href: "#",
   },
@@ -125,10 +178,15 @@ const DEALS = [
     id: "amex-delta",
     card: "Amex Platinum",
     cardColor: "#6e8899",
+    cardLogo: "AMEX",
+    cardSub: "membership rewards®",
     partner: "Delta Air Lines",
     partnerShort: "SkyMiles",
+    partnerColor: "#e01933",
     bonus: "20% Bonus",
-    description: "Transfer Amex points to Delta SkyMiles with a 20% bonus through the end of the month.",
+    ptsFrom: 10000,
+    ptsTo: 12000,
+    bg: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80", // travel
     expires: "Apr 30, 2026",
     href: "#",
   },
@@ -275,7 +333,7 @@ function CenturionWatermark() {
 ───────────────────────────────────────────── */
 function cardShell(hovered, index, visible, extra = {}) {
   return {
-    width: "100%", maxWidth: 320, aspectRatio: "1.586 / 1",
+    width: "100%", aspectRatio: "1.586 / 1",
     borderRadius: 18, padding: "20px 22px",
     position: "relative", overflow: "hidden", cursor: "pointer",
     boxShadow: hovered ? "0 22px 52px rgba(0,0,0,0.4)" : "0 6px 24px rgba(0,0,0,0.22)",
@@ -283,7 +341,7 @@ function cardShell(hovered, index, visible, extra = {}) {
     transform: hovered ? "translateY(-6px) scale(1.02)" : "translateY(0) scale(1)",
     transition: "transform 0.22s ease, box-shadow 0.22s ease",
     display: "flex", flexDirection: "column", justifyContent: "space-between",
-    userSelect: "none", flexShrink: 0, flex: "1 1 240px", minWidth: 220,
+    userSelect: "none",
     ...extra,
   };
 }
@@ -359,47 +417,57 @@ function AmexPlatinumCard({ card, index, visible }) {
         <div style={{
           width: 82, height: 88,
           borderRadius: "50%",
-          border: "2px solid rgba(28,36,46,0.45)",
-          background: "linear-gradient(135deg, rgba(200,210,220,0.4) 0%, rgba(160,172,182,0.3) 100%)",
+          border: "2px solid rgba(28,36,46,0.5)",
+          background: "linear-gradient(145deg, rgba(140,158,176,0.7) 0%, rgba(100,120,140,0.6) 100%)",
           display: "flex", alignItems: "center", justifyContent: "center",
           overflow: "hidden", flexShrink: 0, position: "relative",
-          boxShadow: "inset 0 1px 3px rgba(0,0,0,0.12)",
+          boxShadow: "inset 0 2px 6px rgba(0,0,0,0.22)",
         }}>
-          <svg viewBox="0 0 58 80" style={{ width: 70, height: 86 }} fill="rgba(28,36,46,0.75)">
-            {/* ── Horsehair plume — multiple thin strands ── */}
-            <path d="M22,2 C20,-2 17,1 19,7 L21,13 M26,1 C24,-3 21,1 23,8 L25,13 M29,0 C27,-4 24,0 26,7 L28,13 M32,1 C30,-3 27,0 29,7 L31,13 M36,2 C34,-2 31,1 33,7 L35,13" fill="none" stroke="rgba(28,36,46,0.75)" strokeWidth="2" strokeLinecap="round" />
-            {/* Plume base connector */}
-            <path d="M19,11 Q29,7 39,11 L38,18 L20,18 Z" />
+          {/* Right-facing centurion profile — single compound silhouette */}
+          <svg viewBox="0 0 58 84" style={{ width: "100%", height: "100%" }} preserveAspectRatio="xMidYMid meet">
+            {/* ── Full outer silhouette ─────────────────────────────
+                 Traces: plume (top) → helmet front & nose protrusion →
+                 cheek/chin → neck → pauldrons → breastplate → back neck →
+                 back of helmet → plume base
+            ──────────────────────────────────────────────────────── */}
+            <path
+              fill="rgba(20,30,44,0.9)"
+              d="M 11,22
+                 C 9,16 10,8 16,4
+                 C 20,1 24,0 29,0
+                 C 34,0 38,1 42,4
+                 C 48,8 49,16 47,22
+                 Q 52,25 55,31 L 57,35
+                 Q 56,42 51,46
+                 Q 47,50 43,54
+                 L 41,59
+                 Q 48,61 53,68 L 53,84
+                 L 5,84 L 5,68
+                 Q 10,61 17,59
+                 L 15,54
+                 Q 11,50 7,46
+                 Q 2,42 3,35
+                 Q 3,27 11,22 Z"
+            />
 
-            {/* ── Helmet dome (Corinthian-style) ── */}
-            <path d="M8,32 C8,18 16,12 29,12 C42,12 50,18 50,32 C50,44 44,50 29,50 C14,50 8,44 8,32 Z" />
-            {/* Helmet brim */}
-            <path d="M4,36 L54,36 L56,43 L2,43 Z" />
-            {/* Left cheek guard */}
-            <path d="M4,43 Q2,52 5,58 Q10,54 11,47 Z" />
+            {/* ── Plume hair texture — subtle lighter lines fanning upward ── */}
+            <path
+              d="M 16,21 C 14,15 15,7 19,3
+                 M 23,20 C 21,13 21,5 25,2
+                 M 29,20 C 29,13 29,5 29,0
+                 M 35,20 C 36,13 37,5 35,2
+                 M 41,21 C 43,15 44,7 41,4"
+              fill="none" stroke="rgba(215,228,240,0.28)" strokeWidth="1.6" strokeLinecap="round"
+            />
 
-            {/* ── Face visor opening ── */}
-            <path d="M20,26 C22,18 28,15 36,19 C44,23 46,33 43,40 C41,45 36,48 29,46 C22,44 18,38 20,30 Z"
-              fill="rgba(195,208,220,0.65)" />
-            {/* Eye */}
-            <circle cx="38" cy="27" r="2.5" />
-            {/* Nose bridge (profile protrusion) */}
-            <path d="M45,22 L53,31 L48,36" fill="none" stroke="rgba(28,36,46,0.75)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            {/* Lips / chin line */}
-            <path d="M40,43 C43,47 44,52 42,56" fill="none" stroke="rgba(28,36,46,0.6)" strokeWidth="1.4" strokeLinecap="round" />
+            {/* ── Corinthian helmet eye slit (right side visor opening) ── */}
+            <rect x="43" y="30" width="12" height="5" rx="2.5" fill="rgba(185,205,224,0.65)" />
 
-            {/* ── Neck gorget ── */}
-            <rect x="22" y="48" width="14" height="10" rx="3" />
+            {/* ── Belt / waist line ── */}
+            <path d="M 6,70 L 52,70" stroke="rgba(215,228,240,0.28)" strokeWidth="2.4" fill="none" />
 
-            {/* ── Pauldrons ── */}
-            <path d="M0,58 C8,52 17,54 29,56 C41,54 50,52 58,60 L56,68 C46,64 38,62 29,64 C20,62 12,64 2,68 Z" />
-
-            {/* ── Breastplate / cuirass ── */}
-            <path d="M2,68 L56,68 L52,80 L6,80 Z" />
-            {/* Centre sternum line */}
-            <line x1="29" y1="68" x2="29" y2="80" stroke="rgba(28,36,46,0.22)" strokeWidth="1" />
-            {/* Pectoral muscle line */}
-            <path d="M13,74 Q29,70 45,74" fill="none" stroke="rgba(28,36,46,0.28)" strokeWidth="1.3" />
+            {/* ── Pectoral engraving on breastplate ── */}
+            <path d="M 10,65 Q 29,61 48,65" fill="none" stroke="rgba(215,228,240,0.22)" strokeWidth="1.6" />
           </svg>
         </div>
 
@@ -602,27 +670,101 @@ function TipCard({ tip, index, visible }) {
 ───────────────────────────────────────────── */
 function DealCard({ deal }) {
   return (
-    <div className="bg-white rounded-xl border border-navy/8 shadow-sm p-5 flex flex-col gap-3 h-full">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-pill text-white" style={{ background: deal.cardColor }}>
-            {deal.card}
-          </span>
-          <span className="text-text-muted text-sm">→</span>
-          <span className="text-sm font-semibold text-navy">{deal.partner}</span>
-        </div>
-        <span className="text-xs font-bold text-white bg-coral px-2.5 py-1 rounded-pill whitespace-nowrap flex-shrink-0">
-          {deal.bonus}
-        </span>
+    <div style={{
+      borderRadius: 20, overflow: "hidden", position: "relative",
+      boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+      aspectRatio: "4/5", display: "flex", flexDirection: "column",
+      minHeight: 280,
+    }}>
+      {/* Background photo */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `url(${deal.bg})`,
+        backgroundSize: "cover", backgroundPosition: "center",
+        filter: "brightness(0.72)",
+      }} />
+
+      {/* Gradient overlay — dark at bottom for legibility */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 40%, rgba(0,0,0,0.55) 100%)",
+      }} />
+
+      {/* Bonus pill — top right */}
+      <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2 }}>
+        <span style={{
+          fontSize: 11, fontWeight: 800, letterSpacing: 0.4,
+          background: "#E87C3E", color: "#fff",
+          borderRadius: 999, padding: "4px 12px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+        }}>{deal.bonus}</span>
       </div>
-      <p className="text-sm text-text-secondary leading-relaxed flex-1">{deal.description}</p>
-      <div className="flex items-center justify-between pt-1 border-t border-navy/5">
-        <span className="text-xs text-text-muted">
-          Expires <span className="font-medium text-navy">{deal.expires}</span>
-        </span>
-        <a href={deal.href} className="text-xs font-semibold text-coral hover:text-coral-dark transition-colors" onClick={e => e.stopPropagation()}>
-          Learn more →
-        </a>
+
+      {/* Expires pill — top left */}
+      <div style={{ position: "absolute", top: 14, left: 14, zIndex: 2 }}>
+        <span style={{
+          fontSize: 10, fontWeight: 600,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)",
+          color: "rgba(255,255,255,0.85)",
+          borderRadius: 999, padding: "3px 10px",
+        }}>Expires {deal.expires}</span>
+      </div>
+
+      {/* White card panel — bottom */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 2,
+        background: "rgba(255,255,255,0.96)",
+        backdropFilter: "blur(12px)",
+        borderRadius: "0 0 20px 20px",
+        padding: "18px 20px 16px",
+      }}>
+        {/* From: card program */}
+        <div style={{ marginBottom: 2 }}>
+          <div style={{ fontSize: 13, fontWeight: 900, color: deal.cardColor, letterSpacing: 0.5, lineHeight: 1 }}>
+            {deal.cardLogo}
+          </div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: "#8FA5B8", letterSpacing: 0.3, textTransform: "lowercase", marginTop: 1 }}>
+            {deal.cardSub}
+          </div>
+        </div>
+        <div style={{ fontSize: 26, fontWeight: 800, color: "#1B3A5C", lineHeight: 1.1, marginBottom: 2 }}>
+          {deal.ptsFrom.toLocaleString()} pts
+        </div>
+
+        {/* VS badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}>
+          <div style={{ flex: 1, height: 1, background: "rgba(27,58,92,0.1)" }} />
+          <div style={{
+            width: 28, height: 28, borderRadius: "50%",
+            background: "#E87C3E",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 10, fontWeight: 900, color: "#fff", letterSpacing: 0.3, flexShrink: 0,
+          }}>vs.</div>
+          <div style={{ flex: 1, height: 1, background: "rgba(27,58,92,0.1)" }} />
+        </div>
+
+        {/* To: partner */}
+        <div style={{ marginBottom: 2 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#8FA5B8", letterSpacing: 0.2 }}>
+            {deal.partnerShort}
+          </div>
+        </div>
+        <div style={{ fontSize: 26, fontWeight: 800, color: deal.partnerColor, lineHeight: 1.1 }}>
+          {deal.ptsTo.toLocaleString()} pts
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 11, color: "#8FA5B8", fontWeight: 500 }}>
+            Per 10,000 pts transferred
+          </span>
+          <a href={deal.href} style={{
+            fontSize: 11, fontWeight: 700, color: "#E87C3E",
+            textDecoration: "none", display: "flex", alignItems: "center", gap: 3,
+          }} onClick={e => e.stopPropagation()}>
+            Transfer →
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -679,6 +821,69 @@ function DealsCarousel() {
 }
 
 /* ─────────────────────────────────────────────
+   Opportunity Alert
+───────────────────────────────────────────── */
+function OpportunityAlert({ totalPointsRaw, visible }) {
+  const totalDollars = Math.round(
+    CARDS.reduce((sum, c) => sum + (c.pointsRaw * c.cpp) / 100, 0)
+  ).toLocaleString("en-US");
+
+  return (
+    <div style={{
+      marginTop: 32,
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(16px)",
+      transition: "opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s",
+    }}>
+      <div style={{
+        background: "linear-gradient(135deg, #fffbf5 0%, #fff8ee 100%)",
+        border: "1.5px solid rgba(232,124,62,0.28)",
+        borderRadius: 14,
+        padding: "16px 20px",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 14,
+        boxShadow: "0 2px 12px rgba(232,124,62,0.08)",
+      }}>
+        {/* Icon */}
+        <div style={{
+          width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+          background: "linear-gradient(135deg, #E87C3E, #d4621e)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 17, marginTop: 1,
+          boxShadow: "0 2px 8px rgba(232,124,62,0.3)",
+        }}>💡</div>
+
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#E87C3E", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>
+            Maximize Your Points
+          </div>
+          <p style={{ fontSize: 14, color: "#1B3A5C", lineHeight: 1.65, margin: 0 }}>
+            You're sitting on <strong>${totalDollars} in travel value.</strong> Transfer your{" "}
+            <strong>Chase points → World of Hyatt</strong> to book the{" "}
+            <strong>Park Hyatt Maldives</strong> for just 35k pts/night (worth $1,800+) — then use your{" "}
+            <strong>Amex points → Delta SkyMiles</strong> to cover the flights and make it a full dream trip.
+          </p>
+        </div>
+
+        {/* CTA */}
+        <a href="#" style={{
+          flexShrink: 0, fontSize: 12, fontWeight: 700,
+          color: "#E87C3E", background: "rgba(232,124,62,0.1)",
+          border: "1px solid rgba(232,124,62,0.25)",
+          borderRadius: 999, padding: "6px 14px",
+          textDecoration: "none", whiteSpace: "nowrap", alignSelf: "center",
+          transition: "background 0.15s",
+        }}>
+          See how →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    Main page
 ───────────────────────────────────────────── */
 export default function WalletPage() {
@@ -687,7 +892,12 @@ export default function WalletPage() {
   const [tipsVisible, setTipsVisible] = useState(false);
   const tipsRef = useRef(null);
 
-  const totalPoints = CARDS.reduce((sum, c) => sum + c.pointsRaw, 0).toLocaleString();
+  const totalPointsRaw = CARDS.reduce((sum, c) => sum + c.pointsRaw, 0);
+  const totalPoints = totalPointsRaw.toLocaleString();
+  const totalDollarsRaw = CARDS.reduce((sum, c) => sum + Math.round((c.pointsRaw * c.cpp) / 100), 0);
+  const totalDollars = totalDollarsRaw >= 1000
+    ? `$${(totalDollarsRaw / 1000).toFixed(1)}k`
+    : `$${totalDollarsRaw.toLocaleString("en-US")}`;
 
   // First 4 in primary row, rest overflow
   const primaryCards = CARDS.slice(0, 4);
@@ -735,6 +945,7 @@ export default function WalletPage() {
             <div className="bg-white rounded-xl border border-navy/8 shadow-sm px-5 py-3">
               <div className="text-xs text-text-muted font-medium uppercase tracking-wide mb-0.5">Total Balance</div>
               <div className="text-2xl font-bold text-coral">{totalPoints} pts</div>
+              <div className="text-sm font-semibold text-navy/50 mt-0.5">≈ {totalDollars} est. value</div>
             </div>
           </div>
         </div>
@@ -748,7 +959,34 @@ export default function WalletPage() {
           marginBottom: overflowCards.length > 0 ? 16 : 0,
         }}>
           {primaryCards.map((card, i) => (
-            <CreditCard key={card.id} card={card} index={i} visible={cardsVisible} />
+            <div key={card.id} style={{ flex: "1 1 240px", minWidth: 220, maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+              <CreditCard card={card} index={i} visible={cardsVisible} />
+              <div style={{
+                fontSize: 13, fontWeight: 700, color: "#4A6B8A",
+                opacity: cardsVisible ? 1 : 0,
+                transition: `opacity 0.5s ease ${i * 0.12 + 0.4}s`,
+              }}>
+                ≈ {formatValue(card.pointsRaw, card.cpp)} est. value
+              </div>
+              {/* Benefit pills */}
+              <div style={{
+                display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center",
+                opacity: cardsVisible ? 1 : 0,
+                transition: `opacity 0.5s ease ${i * 0.12 + 0.55}s`,
+              }}>
+                {card.benefits.map((b) => (
+                  <span key={b} style={{
+                    fontSize: 11, fontWeight: 600,
+                    color: "#2E5278",
+                    background: "rgba(27,58,92,0.07)",
+                    border: "1px solid rgba(27,58,92,0.12)",
+                    borderRadius: 999,
+                    padding: "3px 10px",
+                    whiteSpace: "nowrap",
+                  }}>{b}</span>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
@@ -756,10 +994,40 @@ export default function WalletPage() {
         {overflowCards.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
             {overflowCards.map((card, i) => (
-              <CreditCard key={card.id} card={card} index={primaryCards.length + i} visible={cardsVisible} />
+              <div key={card.id} style={{ flex: "1 1 240px", minWidth: 220, maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                <CreditCard card={card} index={primaryCards.length + i} visible={cardsVisible} />
+                <div style={{
+                  fontSize: 13, fontWeight: 700, color: "#4A6B8A",
+                  opacity: cardsVisible ? 1 : 0,
+                  transition: `opacity 0.5s ease ${(primaryCards.length + i) * 0.12 + 0.4}s`,
+                }}>
+                  ≈ {formatValue(card.pointsRaw, card.cpp)} est. value
+                </div>
+                {/* Benefit pills */}
+                <div style={{
+                  display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center",
+                  opacity: cardsVisible ? 1 : 0,
+                  transition: `opacity 0.5s ease ${(primaryCards.length + i) * 0.12 + 0.55}s`,
+                }}>
+                  {card.benefits.map((b) => (
+                    <span key={b} style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: "#2E5278",
+                      background: "rgba(27,58,92,0.07)",
+                      border: "1px solid rgba(27,58,92,0.12)",
+                      borderRadius: 999,
+                      padding: "3px 10px",
+                      whiteSpace: "nowrap",
+                    }}>{b}</span>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
+
+        {/* ── Opportunity Alert ── */}
+        <OpportunityAlert totalPointsRaw={totalPointsRaw} visible={cardsVisible} />
 
         {/* Deals carousel */}
         <div className="mt-14">
