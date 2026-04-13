@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Loader2,
   User,
+  SlidersHorizontal,
 } from "lucide-react";
 
 /* ── Sort options ── */
@@ -89,6 +90,7 @@ function SearchResultsContent() {
   const [source, setSource] = useState("");
   const [activeSort, setActiveSort] = useState<SortValue>("picks");
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [scrapingCarriers, setScrapingCarriers] = useState<Set<string>>(new Set());
 
   // Load user profile on mount
@@ -287,39 +289,39 @@ function SearchResultsContent() {
       <main className="bg-cream min-h-screen">
         {/* ── Search summary bar ── */}
         <section className="bg-navy text-white">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 py-5">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
               {/* Route */}
-              <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <div className="text-center">
-                    <p className="text-xl font-bold">{originCity}</p>
+                    <p className="text-base sm:text-xl font-bold">{originCity}</p>
                     <p className="text-xs text-white/60">{origin}</p>
                   </div>
-                  <ArrowRightLeft size={18} className="text-white/40 mx-2" />
+                  <ArrowRightLeft size={16} className="text-white/40 mx-1 sm:mx-2 shrink-0" />
                   <div className="text-center">
-                    <p className="text-xl font-bold">{destCity}</p>
+                    <p className="text-base sm:text-xl font-bold">{destCity}</p>
                     <p className="text-xs text-white/60">{destination}</p>
                   </div>
                 </div>
               </div>
 
               {/* Trip details */}
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
-                  <Calendar size={14} className="text-white/60" />
-                  <span>{formatDateDisplay(date)}</span>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 sm:px-3 py-1.5 rounded-lg">
+                  <Calendar size={13} className="text-white/60 shrink-0" />
+                  <span className="whitespace-nowrap">{formatDateDisplay(date)}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
-                  <Plane size={14} className="text-white/60" />
-                  <span>{passengers} Passenger{passengers !== "1" ? "s" : ""}</span>
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 sm:px-3 py-1.5 rounded-lg">
+                  <Plane size={13} className="text-white/60 shrink-0" />
+                  <span className="whitespace-nowrap">{passengers} Pax</span>
                 </div>
-                <span className="bg-white/10 px-3 py-1.5 rounded-lg">
+                <span className="bg-white/10 px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap">
                   {cabinDisplay}
                 </span>
                 <button
                   onClick={() => window.history.back()}
-                  className="bg-coral text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-coral-dark transition-colors cursor-pointer"
+                  className="bg-coral text-white px-3 sm:px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-coral-dark transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Modify
                 </button>
@@ -329,7 +331,7 @@ function SearchResultsContent() {
         </section>
 
         {/* ── Results area ── */}
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {/* Results header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
@@ -384,9 +386,21 @@ function SearchResultsContent() {
             </div>
           </div>
 
+          {/* Mobile filters toggle */}
+          <button
+            className="sm:hidden flex items-center gap-2 bg-white border border-navy/10 px-4 py-2 rounded-xl text-sm font-medium text-navy hover:border-navy/20 transition-colors cursor-pointer mb-4 w-full justify-center"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <SlidersHorizontal size={14} />
+            Filters
+            <span className="text-navy/40">{showFilters ? "▲" : "▼"}</span>
+          </button>
+
           {/* Main content: filters + results */}
           <div className="flex gap-6 items-start">
-            <SearchFilters />
+            <div className={`${showFilters ? "block" : "hidden"} sm:block w-full sm:w-auto shrink-0`}>
+              <SearchFilters />
+            </div>
 
             {loading ? (
               <LoadingSkeleton />
@@ -472,6 +486,8 @@ function SearchResultsContent() {
                       userProgramFullName={pf.userProgramFullName}
                       userBalance={pf.userBalance}
                       isLiveScraping={isLiveScraping}
+                      searchDate={date}
+                      searchCabin={cabin.charAt(0).toUpperCase() + cabin.slice(1)}
                     />
                   );
                 })}

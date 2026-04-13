@@ -21,32 +21,106 @@ const TRANSFER_PORTAL_NAMES: Record<string, string> = {
   "bilt": "Bilt Rewards",
 };
 
-const BOOKING_URLS: Record<string, string> = {
-  united: "https://www.united.com/en/us/awardtravel",
-  aa: "https://www.aa.com/booking/find-flights",
-  delta: "https://www.delta.com/flight-search/book-a-flight",
-  southwest: "https://www.southwest.com/air/booking",
-  alaska: "https://www.alaskaair.com/booking/flights",
-  jetblue: "https://www.jetblue.com/booking/flights",
-  ba: "https://www.britishairways.com/travel/redeem",
-  virgin: "https://www.virginatlantic.com/book/flights",
-  "flying-blue": "https://www.flyingblue.com/en/spend/flights",
-  aeroplan: "https://www.aircanada.com/aeroplan",
-  emirates: "https://www.emirates.com/us/english/book",
-  singapore: "https://www.singaporeair.com/en_UK/ppsclub-krisflyer/use-miles",
-  ana: "https://www.ana.co.jp/en/us/amc/award-reservation",
-  cathay: "https://www.cathaypacific.com/cx/en_US/book-a-trip/redeem-flights",
-  turkish: "https://www.turkishairlines.com/en-us/miles-and-smiles",
-  qatar: "https://www.qatarairways.com/en/privilege-club/use-qmiles.html",
-  etihad: "https://www.etihad.com/en-us/guest/flights",
-  avianca: "https://www.lifemiles.com/flight/search",
-  iberia: "https://www.iberia.com/us/avios",
-  hawaiian: "https://www.hawaiianairlines.com/my-account/hawaiianmiles",
-  latam: "https://www.latamairlines.com/us/en/latam-pass",
-  copa: "https://www.copaair.com/en-us/connectmiles",
-  aeromexico: "https://www.aeromexico.com/en-us/club-premier",
-  smiles: "https://www.smiles.com.br/flights",
+/** Map cabin label → airline-specific cabin codes */
+const CABIN_CODES: Record<string, Record<string, string>> = {
+  united:       { Economy: "ECONOMY",  Business: "BUSINESS", First: "FIRST"    },
+  aa:           { Economy: "COACH",    Business: "BUSINESS", First: "FIRST"    },
+  delta:        { Economy: "COACH",    Business: "BUSINESS", First: "FIRST"    },
+  southwest:    { Economy: "ECONOMY",  Business: "ECONOMY",  First: "ECONOMY"  },
+  alaska:       { Economy: "COACH",    Business: "BUSINESS", First: "FIRST"    },
+  jetblue:      { Economy: "ECONOMY",  Business: "MINT",     First: "MINT"     },
+  ba:           { Economy: "M",        Business: "C",        First: "F"        },
+  virgin:       { Economy: "Economy",  Business: "Upper",    First: "Upper"    },
+  "flying-blue":{ Economy: "ECONOMY",  Business: "BUSINESS", First: "FIRST"    },
+  aeroplan:     { Economy: "Economy",  Business: "Business", First: "First"    },
+  emirates:     { Economy: "Economy",  Business: "Business", First: "First"    },
+  singapore:    { Economy: "economy",  Business: "business", First: "suites"   },
+  ana:          { Economy: "ECONOMY",  Business: "BUSINESS", First: "FIRST"    },
+  cathay:       { Economy: "economy",  Business: "business", First: "first"    },
+  turkish:      { Economy: "ECONOMY",  Business: "BUSINESS", First: "FIRST"    },
+  qatar:        { Economy: "ECONOMY",  Business: "BUSINESS", First: "FIRST"    },
+  etihad:       { Economy: "Economy",  Business: "Business", First: "First"    },
+  avianca:      { Economy: "Economy",  Business: "Business", First: "First"    },
+  iberia:       { Economy: "Y",        Business: "C",        First: "F"        },
+  hawaiian:     { Economy: "MileageFirst", Business: "Business", First: "First"},
 };
+
+/** Formats a date string "YYYY-MM-DD" into MM/DD/YYYY for airlines that need it */
+function fmtSlash(d: string) {
+  const [y, m, day] = d.split("-");
+  return `${m}/${day}/${y}`;
+}
+
+/**
+ * Build a deep-linked award search URL for a given airline program,
+ * pre-filled with origin, destination, date, cabin and 1 adult passenger.
+ */
+function buildDeepLink(
+  programKey: string,
+  origin: string,
+  destination: string,
+  date: string,         // YYYY-MM-DD
+  cabin: string,        // "Economy" | "Business" | "First"
+): string {
+  const cc = CABIN_CODES[programKey] ?? {};
+  const cabinCode = cc[cabin] ?? cc["Economy"] ?? "ECONOMY";
+  const o = encodeURIComponent(origin);
+  const d = encodeURIComponent(destination);
+  const dt = encodeURIComponent(date);
+
+  switch (programKey) {
+    case "united":
+      return `https://www.united.com/ual/en/us/flight-search/book-a-flight/results/rev?f=${o}&t=${d}&d=${encodeURIComponent(fmtSlash(date))}&tt=1&at=1&noOfAdults=1&noOfSeniors=0&noOfChildren=0&sc=7&px=1&taxng=1&newHP=True&clm=7&st=bestmatches&fareFamily=1`;
+    case "aa":
+      return `https://www.aa.com/booking/find-flights?fromCity=${o}&toCity=${d}&depart=${dt}&paxCount=1&cabin=${cabinCode}&searchType=Award&tripType=OneWay`;
+    case "delta":
+      return `https://www.delta.com/flight-search/book-a-flight#/results/oneway/${o}/${d}/${date}//1/0/0/${cabinCode}`;
+    case "southwest":
+      return `https://www.southwest.com/air/booking/select.html?originationAirportCode=${o}&destinationAirportCode=${d}&departureDate=${dt}&passengerCount=1&tripType=oneway&fareType=POINTS`;
+    case "alaska":
+      return `https://www.alaskaair.com/planbook/flights/search?O=${o}&D=${d}&DT1=${dt}&A=1&C=0&YTH=0&I=0&ShoppingMethod=onlineAward`;
+    case "jetblue":
+      return `https://www.jetblue.com/booking/flights?from=${o}&to=${d}&depart=${dt}&isAward=true&passengers=A1&cabinType=${cabinCode}`;
+    case "ba":
+      return `https://www.britishairways.com/travel/redeem/public/en_us?pageid=REDEEM&eId=106004&from=${o}&to=${d}&depart_date=${dt}&cabin_code=${cabinCode}&adult=1`;
+    case "virgin":
+      return `https://www.virginatlantic.com/book/flight-search.html?departureAirport=${o}&destinationAirport=${d}&departureDate=${dt}&cabin=${cabinCode}&adults=1&isMiles=true`;
+    case "flying-blue":
+      return `https://wwws.airfrance.us/search/passenger/results;departing=${o};arriving=${d};outboundDate=${dt};cabin=${cabinCode};adults=1;youngAdults=0;children=0;infants=0;redeemMiles=true`;
+    case "aeroplan":
+      return `https://www.aircanada.com/aeroplan/redeem/availability/outbound?org0=${o}&dest0=${d}&departureDate0=${dt}&ADT=1&YTH=0&CHD=0&INF=0&INS=0&tripType=O`;
+    case "emirates":
+      return `https://www.emirates.com/us/english/book/flights/#/reward-search?from=${o}&to=${d}&date=${dt}&class=${cabinCode}&adults=1`;
+    case "singapore":
+      return `https://www.singaporeair.com/en_UK/us/plan-travel/book-a-flight/?tripType=OW&fromCity=${o}&toCity=${d}&departDate=${dt}&cabinClass=${cabinCode}&adultNo=1&redemption=true`;
+    case "ana":
+      return `https://aswbe-i.ana.co.jp/international_asw/pages/award/search/roundtrip/award_search_roundtrip_input.jsp?org=${o}&dst=${d}&dep1Date=${dt}&cbn=${cabinCode}&paxCount=1`;
+    case "cathay":
+      return `https://www.cathaypacific.com/cx/en_US/book-a-trip/redeem-flights.html?departure=${o}&destination=${d}&departureDate=${dt}&cabin=${cabinCode}&adults=1`;
+    case "turkish":
+      return `https://www.turkishairlines.com/en-us/miles-and-smiles/awards/book-a-flight/?from=${o}&to=${d}&date=${dt}&class=${cabinCode}&pax=1`;
+    case "qatar":
+      return `https://www.qatarairways.com/en/privilege-club/use-qmiles.html?from=${o}&to=${d}&date=${dt}&cabin=${cabinCode}&adults=1`;
+    case "etihad":
+      return `https://www.etihad.com/en-us/guest/flights?from=${o}&to=${d}&date=${dt}&cabin=${cabinCode}&adults=1&tripType=O&isAward=true`;
+    case "avianca":
+      return `https://www.lifemiles.com/flight/search?origin=${o}&destination=${d}&departureDate=${dt}&cabin=${cabinCode}&adults=1&tripType=OW`;
+    case "iberia":
+      return `https://www.iberia.com/us/avios?origin=${o}&destination=${d}&departureDate=${dt}&cabin=${cabinCode}&adults=1&tripType=OW`;
+    case "hawaiian":
+      return `https://www.hawaiianairlines.com/flights/results?Origin=${o}&Destination=${d}&DepartDate=${dt}&Adults=1&Children=0&AwardTravel=True&CabinClass=${cabinCode}`;
+    case "latam":
+      return `https://www.latamairlines.com/us/en/book/flights/results?origin=${o}&destination=${d}&departure=${dt}&adt=1&inf=0&chd=0&cabin=${cabinCode}&flexible=false&redemption=true`;
+    case "copa":
+      return `https://www.copaair.com/en-us/buy-plan-travel/award-flights/?origin=${o}&destination=${d}&date=${dt}&cabin=${cabinCode}&adults=1`;
+    case "aeromexico":
+      return `https://www.aeromexico.com/en-us/buy-tickets/results?origin=${o}&destination=${d}&date=${dt}&adults=1&cabin=${cabinCode}&award=true`;
+    case "smiles":
+      return `https://www.smiles.com.br/flights?originAirportCode=${o}&destinationAirportCode=${d}&departureDate=${dt}&cabinType=${cabinCode}&adults=1&isAward=true`;
+    default:
+      return "#";
+  }
+}
 
 /* ── Types ── */
 export interface TransferOption {
@@ -160,6 +234,8 @@ export function FlightResultCard({
   userProgramFullName,
   userBalance,
   isLiveScraping,
+  searchDate,
+  searchCabin,
 }: {
   flight: FlightResult;
   personalBadge?: "can-book" | "best-for-you" | "almost-there";
@@ -168,8 +244,11 @@ export function FlightResultCard({
   userProgramName?: string;
   userProgramFullName?: string;
   userBalance?: number;
-  /** Whether a live scrape is in progress for this card's airline. */
   isLiveScraping?: boolean;
+  /** The search departure date (YYYY-MM-DD) — used to deep-link booking URLs */
+  searchDate?: string;
+  /** The search cabin class ("Economy" | "Business" | "First") */
+  searchCabin?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -318,7 +397,17 @@ export function FlightResultCard({
 
               const portalUrl = opt.transferFromId ? TRANSFER_PORTAL_URLS[opt.transferFromId] : undefined;
               const portalName = opt.transferFromId ? TRANSFER_PORTAL_NAMES[opt.transferFromId] : undefined;
-              const bookingUrl = opt.programKey ? BOOKING_URLS[opt.programKey] : undefined;
+              const bookingUrl = opt.programKey && searchDate
+                ? buildDeepLink(
+                    opt.programKey,
+                    flight.departureAirport,
+                    flight.arrivalAirport,
+                    searchDate,
+                    searchCabin ?? flight.cabin ?? "Economy",
+                  )
+                : opt.programKey
+                  ? buildDeepLink(opt.programKey, flight.departureAirport, flight.arrivalAirport, new Date().toISOString().split("T")[0], searchCabin ?? flight.cabin ?? "Economy")
+                  : undefined;
 
               const hasTransferStep = !!opt.transferFrom;
 
@@ -332,8 +421,8 @@ export function FlightResultCard({
                   }`}
                 >
                   {/* Header row */}
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-start sm:items-center justify-between px-4 py-3 gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div
                         className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                           isUserProgram
@@ -344,8 +433,8 @@ export function FlightResultCard({
                         {isUserProgram ? <CheckCircle size={14} /> : <Star size={14} />}
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-navy truncate">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-sm font-semibold text-navy">
                             {opt.program}
                           </p>
                           {opt.badge === "best" && (
@@ -367,10 +456,10 @@ export function FlightResultCard({
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-lg font-bold text-navy">
+                      <p className="text-base sm:text-lg font-bold text-navy">
                         {opt.points.toLocaleString()}
                       </p>
-                      <p className="text-xs text-text-muted">points needed</p>
+                      <p className="text-xs text-text-muted">pts needed</p>
                     </div>
                   </div>
 

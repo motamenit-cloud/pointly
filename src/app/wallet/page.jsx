@@ -658,14 +658,20 @@ function DealCard({ deal }) {
 ───────────────────────────────────────────── */
 function DealsCarousel({ deals }) {
   const [index, setIndex] = useState(0);
-  const perPage = 2;
+  const [perPage, setPerPage] = useState(2);
+  useEffect(() => {
+    const update = () => setPerPage(window.innerWidth < 640 ? 1 : 2);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   const maxIndex = Math.max(0, Math.ceil(deals.length / perPage) - 1);
   const prev = () => setIndex(i => Math.max(0, i - 1));
   const next = () => setIndex(i => Math.min(maxIndex, i + 1));
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-x-4 gap-y-3 mb-6">
         <div>
           <h2 className="text-xl font-bold text-navy">Current deals with your credit cards</h2>
           <p className="text-sm text-text-secondary mt-1">Limited-time transfer bonuses for your linked cards</p>
@@ -685,7 +691,10 @@ function DealsCarousel({ deals }) {
           transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)",
         }}>
           {deals.map(deal => (
-            <div key={deal.id} style={{ minWidth: "calc(50% - 8px)", maxWidth: "calc(50% - 8px)" }}>
+            <div key={deal.id} style={{
+              minWidth: perPage === 1 ? "100%" : "calc(50% - 8px)",
+              maxWidth: perPage === 1 ? "100%" : "calc(50% - 8px)",
+            }}>
               <DealCard deal={deal} />
             </div>
           ))}
@@ -720,44 +729,45 @@ function OpportunityAlert({ totalPointsRaw, totalDollars, visible }) {
         border: "1.5px solid rgba(232,124,62,0.28)",
         borderRadius: 14,
         padding: "16px 20px",
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 14,
         boxShadow: "0 2px 12px rgba(232,124,62,0.08)",
       }}>
-        {/* Icon */}
-        <div style={{
-          width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-          background: "linear-gradient(135deg, #E87C3E, #d4621e)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 17, marginTop: 1,
-          boxShadow: "0 2px 8px rgba(232,124,62,0.3)",
-        }}>💡</div>
+        <div className="flex items-start gap-3.5">
+          {/* Icon */}
+          <div style={{
+            width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+            background: "linear-gradient(135deg, #E87C3E, #d4621e)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 17, marginTop: 1,
+            boxShadow: "0 2px 8px rgba(232,124,62,0.3)",
+          }}>💡</div>
 
-        {/* Text */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#E87C3E", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>
-            Maximize Your Points
+          {/* Text + CTA */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#E87C3E", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>
+                Maximize Your Points
+              </div>
+              <p style={{ fontSize: 14, color: "#1B3A5C", lineHeight: 1.65, margin: 0 }}>
+                You're sitting on <strong>{totalDollars} in travel value.</strong> Transfer your{" "}
+                <strong>Chase points → World of Hyatt</strong> to book the{" "}
+                <strong>Park Hyatt Maldives</strong> for just 35k pts/night (worth $1,800+) — then use your{" "}
+                <strong>Amex points → Delta SkyMiles</strong> to cover the flights and make it a full dream trip.
+              </p>
+            </div>
+
+            {/* CTA */}
+            <a href="#" style={{
+              flexShrink: 0, fontSize: 12, fontWeight: 700,
+              color: "#E87C3E", background: "rgba(232,124,62,0.1)",
+              border: "1px solid rgba(232,124,62,0.25)",
+              borderRadius: 999, padding: "6px 14px",
+              textDecoration: "none", whiteSpace: "nowrap",
+              transition: "background 0.15s", alignSelf: "flex-start",
+            }}>
+              See how →
+            </a>
           </div>
-          <p style={{ fontSize: 14, color: "#1B3A5C", lineHeight: 1.65, margin: 0 }}>
-            You're sitting on <strong>${totalDollars} in travel value.</strong> Transfer your{" "}
-            <strong>Chase points → World of Hyatt</strong> to book the{" "}
-            <strong>Park Hyatt Maldives</strong> for just 35k pts/night (worth $1,800+) — then use your{" "}
-            <strong>Amex points → Delta SkyMiles</strong> to cover the flights and make it a full dream trip.
-          </p>
         </div>
-
-        {/* CTA */}
-        <a href="#" style={{
-          flexShrink: 0, fontSize: 12, fontWeight: 700,
-          color: "#E87C3E", background: "rgba(232,124,62,0.1)",
-          border: "1px solid rgba(232,124,62,0.25)",
-          borderRadius: 999, padding: "6px 14px",
-          textDecoration: "none", whiteSpace: "nowrap", alignSelf: "center",
-          transition: "background 0.15s",
-        }}>
-          See how →
-        </a>
       </div>
     </div>
   );
@@ -845,7 +855,7 @@ export default function WalletPage() {
     <div className="min-h-screen bg-cream">
       <Header />
 
-      <main className="max-w-6xl mx-auto px-6 lg:px-8 py-12 pb-20">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-20">
 
         {/* Page header */}
         <div className="mb-8" style={{ opacity: headerVisible ? 1 : 0, transform: headerVisible ? "translateY(0)" : "translateY(16px)", transition: "opacity 0.5s ease, transform 0.5s ease" }}>
@@ -859,7 +869,7 @@ export default function WalletPage() {
                 {cards.length} cards · {totalPoints} total points · Sorted by highest balance
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-navy/8 shadow-sm px-5 py-3">
+            <div className="bg-white rounded-xl border border-navy/8 shadow-sm px-4 sm:px-5 py-3 shrink-0">
               <div className="text-xs text-text-muted font-medium uppercase tracking-wide mb-0.5">Total Balance</div>
               <div className="text-2xl font-bold text-coral">{totalPoints} pts</div>
               <div className="text-sm font-semibold text-navy/50 mt-0.5">≈ {totalDollars} est. value</div>
@@ -868,15 +878,12 @@ export default function WalletPage() {
         </div>
 
         {/* Primary cards row (up to 4) */}
-        <div style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 20,
-          flexWrap: "wrap",
-          marginBottom: overflowCards.length > 0 ? 16 : 0,
-        }}>
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 justify-items-center"
+          style={{ marginBottom: overflowCards.length > 0 ? 16 : 0 }}
+        >
           {primaryCards.map((card, i) => (
-            <div key={card.id} style={{ flex: "1 1 240px", minWidth: 220, maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            <div key={card.id} style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
               <CreditCard card={card} index={i} visible={cardsVisible} />
               <div style={{
                 fontSize: 13, fontWeight: 700, color: "#4A6B8A",
@@ -909,9 +916,9 @@ export default function WalletPage() {
 
         {/* Overflow row (5th card onwards) */}
         {overflowCards.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 justify-items-center">
             {overflowCards.map((card, i) => (
-              <div key={card.id} style={{ flex: "1 1 240px", minWidth: 220, maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+              <div key={card.id} style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
                 <CreditCard card={card} index={primaryCards.length + i} visible={cardsVisible} />
                 <div style={{
                   fontSize: 13, fontWeight: 700, color: "#4A6B8A",
