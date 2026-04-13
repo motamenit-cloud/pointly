@@ -859,9 +859,6 @@ export default function WalletPage() {
 
         {/* Page header */}
         <div className="mb-8" style={{ opacity: headerVisible ? 1 : 0, transform: headerVisible ? "translateY(0)" : "translateY(16px)", transition: "opacity 0.5s ease, transform 0.5s ease" }}>
-          <div className="inline-block bg-coral/10 text-coral text-xs font-semibold px-4 py-1.5 rounded-pill mb-4 tracking-wide uppercase">
-            Your Points Universe
-          </div>
           <div className="flex items-end justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-navy leading-tight">My Wallet</h1>
