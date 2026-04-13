@@ -825,10 +825,17 @@ export default function WalletPage() {
             const programEntry = programId
               ? userProfile?.programs?.find((p) => p.programId === programId)
               : null;
+            // If the user has a saved balance for this program, use it — otherwise fall back to seed
+            const liveBalance = programEntry?.balance ?? null;
+            const pointsRaw = liveBalance !== null ? liveBalance : seed.pointsRaw;
+            const points = pointsRaw.toLocaleString("en-US");
+
             return {
               ...meta,
-              ...seed,        // seed overrides: holder, number, pointsRaw, points, gradient overrides
+              ...seed,        // seed overrides: holder, number, gradient overrides
               id: seed.apiId, // ensure id is consistent
+              pointsRaw,      // live balance from profile (or seed fallback)
+              points,         // formatted string
               lastSyncedAt: programEntry?.lastSyncedAt ?? null,
             };
           })
