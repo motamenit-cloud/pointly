@@ -30,86 +30,37 @@ const KEYFRAMES = `
 /* ─────────────────────────────────────────────
    Cards — sorted by points descending (most → least)
 ───────────────────────────────────────────── */
-const CARDS = [
-  // 1st: Amex Platinum — most points
+/* ─────────────────────────────────────────────
+   Wallet display cards — demo data
+   (matches the 3 cards a typical user would have linked)
+   pointsRaw / holder / number are user-specific and live here,
+   while card metadata (benefits, gradient, cpp) comes from the API.
+───────────────────────────────────────────── */
+const WALLET_CARDS_SEED = [
   {
-    id: "amex-platinum",
-    name: "American Express Platinum",
-    shortName: "The Platinum Card",
+    apiId: "amex-platinum",        // matches CreditCard.id in the database
     holder: "Alex Rivera",
     number: "•••• •••••• •1007",
     pointsRaw: 87200,
     points: "87,200",
-    network: "AMEX",
-    cpp: 2.0, // cents per point (Membership Rewards travel value)
-    benefits: [
-      "$200 Uber Cash",
-      "$200 Airline Credit",
-      "$200 Hotel Credit",
-      "$100 Saks Credit",
-      "$189 CLEAR Credit",
-      "Centurion Lounge",
-      "Priority Pass",
-      "Global Entry",
-    ],
-    // Realistic Amex Platinum: dark gunmetal silver like the real metal card
-    gradient: "linear-gradient(135deg, #484f58 0%, #5c6572 10%, #6e7a88 20%, #7e8c9c 30%, #8896a6 40%, #808e9e 50%, #6e7c8c 60%, #5c6a7a 70%, #4e5a6a 80%, #424e5c 90%, #3a4450 100%)",
-    chipColor: "#c8a832",
-    textColor: "#e8eef4",
-    subColor: "rgba(232,238,244,0.55)",
-    logoEl: "amex",
+    // Visual overrides to match real Amex Platinum metal card look
+    gradient: "linear-gradient(145deg, #c0c8d0 0%, #d4dce4 18%, #e4ecf2 34%, #eef4f8 48%, #e6eef4 62%, #d0d8e0 78%, #bcc4cc 92%, #b4bcc4 100%)",
+    textColor: "#1c2430",
+    subColor: "rgba(28,36,48,0.55)",
   },
-  // 2nd: Chase Sapphire Preferred
   {
-    id: "chase",
-    name: "Chase Sapphire Preferred",
-    shortName: "Sapphire Preferred",
+    apiId: "chase-sapphire-preferred",
     holder: "Alex Rivera",
     number: "•••• •••• •••• 4892",
     pointsRaw: 42500,
     points: "42,500",
-    network: "VISA",
-    cpp: 2.0, // cents per point (Ultimate Rewards travel value)
-    benefits: [
-      "$50 Hotel Credit",
-      "3x Dining",
-      "3x Travel",
-      "Trip Insurance",
-      "No FX Fees",
-      "Primary Car Rental",
-    ],
-    // Realistic Chase Sapphire: rich sapphire blue gem gradient
-    gradient: "linear-gradient(145deg, #0a1e58 0%, #152f7a 18%, #1c3f9e 38%, #1a3a92 55%, #0f2568 75%, #07174a 100%)",
-    chipColor: "#c8a832",
-    textColor: "#ffffff",
-    subColor: "rgba(255,255,255,0.6)",
-    logoEl: "visa",
   },
-  // 3rd: Apple Card — fewest points
   {
-    id: "apple",
-    name: "Apple Card",
-    shortName: "Apple Card",
+    apiId: "apple-card",
     holder: "Alex Rivera",
     number: "Virtual",
     pointsRaw: 12840,
     points: "12,840",
-    network: "MC",
-    cpp: 1.0, // cents per point (Daily Cash / cashback)
-    benefits: [
-      "3% on Apple",
-      "2% Apple Pay",
-      "1% All Else",
-      "0% Financing",
-      "No Fees Ever",
-      "Daily Cash",
-    ],
-    // Realistic Apple Card: pure titanium white
-    gradient: "linear-gradient(145deg, #f5f5f7 0%, #ffffff 25%, #eeeeef 55%, #e3e3e5 78%, #d8d8da 100%)",
-    chipColor: "#a8a8a8",
-    textColor: "#1d1d1f",
-    subColor: "rgba(0,0,0,0.35)",
-    logoEl: "mc",
   },
 ];
 
@@ -122,75 +73,7 @@ function formatValue(pointsRaw, cpp) {
   return `$${dollars.toLocaleString("en-US")}`;
 }
 
-/* ─────────────────────────────────────────────
-   Transfer deals data
-───────────────────────────────────────────── */
-const DEALS = [
-  {
-    id: "chase-af",
-    card: "Chase Sapphire",
-    cardColor: "#1a3a6b",
-    cardLogo: "CHASE",
-    cardSub: "ultimate rewards®",
-    partner: "Air France / KLM",
-    partnerShort: "Flying Blue",
-    partnerColor: "#0057b8",
-    bonus: "30% Bonus",
-    ptsFrom: 10000,
-    ptsTo: 13000,
-    bg: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=600&q=80", // Paris
-    expires: "Apr 30, 2026",
-    href: "#",
-  },
-  {
-    id: "amex-ba",
-    card: "Amex Platinum",
-    cardColor: "#6e8899",
-    cardLogo: "AMEX",
-    cardSub: "membership rewards®",
-    partner: "British Airways",
-    partnerShort: "Avios",
-    partnerColor: "#075aaa",
-    bonus: "25% Bonus",
-    ptsFrom: 10000,
-    ptsTo: 12500,
-    bg: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&q=80", // London
-    expires: "Apr 25, 2026",
-    href: "#",
-  },
-  {
-    id: "chase-united",
-    card: "Chase Sapphire",
-    cardColor: "#1a3a6b",
-    cardLogo: "CHASE",
-    cardSub: "ultimate rewards®",
-    partner: "United Airlines",
-    partnerShort: "MileagePlus",
-    partnerColor: "#005daa",
-    bonus: "2x Transfer",
-    ptsFrom: 10000,
-    ptsTo: 20000,
-    bg: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&q=80", // airplane
-    expires: "May 15, 2026",
-    href: "#",
-  },
-  {
-    id: "amex-delta",
-    card: "Amex Platinum",
-    cardColor: "#6e8899",
-    cardLogo: "AMEX",
-    cardSub: "membership rewards®",
-    partner: "Delta Air Lines",
-    partnerShort: "SkyMiles",
-    partnerColor: "#e01933",
-    bonus: "20% Bonus",
-    ptsFrom: 10000,
-    ptsTo: 12000,
-    bg: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80", // travel
-    expires: "Apr 30, 2026",
-    href: "#",
-  },
-];
+/* DEALS are fetched from /api/credit-cards/offers — see WalletPage */
 
 const TIPS = [
   { emoji: "🍽️", category: "Dining",       card: "Amex Platinum",      detail: "4x points at restaurants worldwide + delivery apps", cardColor: "#c8922a" },
@@ -773,10 +656,10 @@ function DealCard({ deal }) {
 /* ─────────────────────────────────────────────
    DealsCarousel
 ───────────────────────────────────────────── */
-function DealsCarousel() {
+function DealsCarousel({ deals }) {
   const [index, setIndex] = useState(0);
   const perPage = 2;
-  const maxIndex = Math.ceil(DEALS.length / perPage) - 1;
+  const maxIndex = Math.max(0, Math.ceil(deals.length / perPage) - 1);
   const prev = () => setIndex(i => Math.max(0, i - 1));
   const next = () => setIndex(i => Math.min(maxIndex, i + 1));
 
@@ -788,7 +671,7 @@ function DealsCarousel() {
           <p className="text-sm text-text-secondary mt-1">Limited-time transfer bonuses for your linked cards</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-coral bg-coral/10 px-3 py-1 rounded-pill">{DEALS.length} active</span>
+          <span className="text-xs font-semibold text-coral bg-coral/10 px-3 py-1 rounded-pill">{deals.length} active</span>
           <div className="flex gap-2">
             <button onClick={prev} disabled={index === 0} className="w-8 h-8 rounded-full border border-navy/15 flex items-center justify-center text-navy hover:bg-sky-light disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer text-lg">‹</button>
             <button onClick={next} disabled={index === maxIndex} className="w-8 h-8 rounded-full border border-navy/15 flex items-center justify-center text-navy hover:bg-sky-light disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer text-lg">›</button>
@@ -801,7 +684,7 @@ function DealsCarousel() {
           transform: `translateX(calc(-${index * 100}% - ${index * 16}px))`,
           transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)",
         }}>
-          {DEALS.map(deal => (
+          {deals.map(deal => (
             <div key={deal.id} style={{ minWidth: "calc(50% - 8px)", maxWidth: "calc(50% - 8px)" }}>
               <DealCard deal={deal} />
             </div>
@@ -823,10 +706,7 @@ function DealsCarousel() {
 /* ─────────────────────────────────────────────
    Opportunity Alert
 ───────────────────────────────────────────── */
-function OpportunityAlert({ totalPointsRaw, visible }) {
-  const totalDollars = Math.round(
-    CARDS.reduce((sum, c) => sum + (c.pointsRaw * c.cpp) / 100, 0)
-  ).toLocaleString("en-US");
+function OpportunityAlert({ totalPointsRaw, totalDollars, visible }) {
 
   return (
     <div style={{
@@ -890,18 +770,55 @@ export default function WalletPage() {
   const [cardsVisible, setCardsVisible] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(false);
   const [tipsVisible, setTipsVisible] = useState(false);
+  const [cards, setCards] = useState([]);
+  const [deals, setDeals] = useState([]);
   const tipsRef = useRef(null);
 
-  const totalPointsRaw = CARDS.reduce((sum, c) => sum + c.pointsRaw, 0);
+  // Fetch card catalog and active offers from the API, merge with wallet seed data
+  useEffect(() => {
+    async function loadData() {
+      try {
+        // Fetch all card definitions and all active offers in parallel
+        const [cardsRes, offersRes] = await Promise.all([
+          fetch("/api/credit-cards"),
+          fetch("/api/credit-cards/offers"),
+        ]);
+        const cardCatalog = await cardsRes.json();
+        const offers = await offersRes.json();
+
+        // Merge catalog data with the user's wallet seed (points balance, card number, etc.)
+        const merged = WALLET_CARDS_SEED
+          .map((seed) => {
+            const meta = cardCatalog.find((c) => c.id === seed.apiId);
+            if (!meta) return null;
+            return {
+              ...meta,
+              ...seed,        // seed overrides: holder, number, pointsRaw, points, gradient overrides
+              id: seed.apiId, // ensure id is consistent
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => b.pointsRaw - a.pointsRaw); // sort highest pts first
+
+        setCards(merged);
+        setDeals(offers);
+      } catch (err) {
+        console.error("Failed to load credit card data:", err);
+      }
+    }
+    loadData();
+  }, []);
+
+  const totalPointsRaw = cards.reduce((sum, c) => sum + (c.pointsRaw ?? 0), 0);
   const totalPoints = totalPointsRaw.toLocaleString();
-  const totalDollarsRaw = CARDS.reduce((sum, c) => sum + Math.round((c.pointsRaw * c.cpp) / 100), 0);
+  const totalDollarsRaw = cards.reduce((sum, c) => sum + Math.round(((c.pointsRaw ?? 0) * (c.cpp ?? 1)) / 100), 0);
   const totalDollars = totalDollarsRaw >= 1000
     ? `$${(totalDollarsRaw / 1000).toFixed(1)}k`
     : `$${totalDollarsRaw.toLocaleString("en-US")}`;
 
   // First 4 in primary row, rest overflow
-  const primaryCards = CARDS.slice(0, 4);
-  const overflowCards = CARDS.slice(4);
+  const primaryCards = cards.slice(0, 4);
+  const overflowCards = cards.slice(4);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -939,7 +856,7 @@ export default function WalletPage() {
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-navy leading-tight">My Wallet</h1>
               <p className="mt-2 text-text-secondary text-base">
-                {CARDS.length} cards · {totalPoints} total points · Sorted by highest balance
+                {cards.length} cards · {totalPoints} total points · Sorted by highest balance
               </p>
             </div>
             <div className="bg-white rounded-xl border border-navy/8 shadow-sm px-5 py-3">
@@ -1027,11 +944,11 @@ export default function WalletPage() {
         )}
 
         {/* ── Opportunity Alert ── */}
-        <OpportunityAlert totalPointsRaw={totalPointsRaw} visible={cardsVisible} />
+        <OpportunityAlert totalPointsRaw={totalPointsRaw} totalDollars={totalDollars} visible={cardsVisible} />
 
         {/* Deals carousel */}
         <div className="mt-14">
-          <DealsCarousel />
+          <DealsCarousel deals={deals} />
         </div>
 
         {/* Tips section */}
