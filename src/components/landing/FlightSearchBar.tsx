@@ -126,7 +126,7 @@ export function FlightSearchBar() {
   return (
     <section
       id="search"
-      className="relative -mt-14 z-10 pb-8 md:pb-12 bg-gradient-to-b from-cream via-sky-light/40 to-sky-light"
+      className="relative mt-4 md:-mt-14 z-10 pb-8 md:pb-12 bg-gradient-to-b from-cream via-sky-light/40 to-sky-light"
     >
       <div className="max-w-4xl mx-auto px-6 lg:px-8">
         {/* Pill toggles */}

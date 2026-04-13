@@ -1,6 +1,6 @@
 export function HeroSection() {
   return (
-    <section className="bg-cream pt-6 pb-8 md:pt-10 md:pb-10 lg:pt-10 lg:pb-12">
+    <section className="bg-cream pt-6 pb-4 md:pt-10 md:pb-10 lg:pt-10 lg:pb-12">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
         <div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-navy leading-tight">
