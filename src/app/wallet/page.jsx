@@ -271,79 +271,234 @@ function CenturionWatermark() {
 }
 
 /* ─────────────────────────────────────────────
-   CreditCard — flat layout matching screenshot
+   Shared card shell styles
+───────────────────────────────────────────── */
+function cardShell(hovered, index, visible, extra = {}) {
+  return {
+    width: "100%", maxWidth: 320, aspectRatio: "1.586 / 1",
+    borderRadius: 18, padding: "20px 22px",
+    position: "relative", overflow: "hidden", cursor: "pointer",
+    boxShadow: hovered ? "0 22px 52px rgba(0,0,0,0.4)" : "0 6px 24px rgba(0,0,0,0.22)",
+    animation: visible ? `cardIn 0.5s ease ${index * 0.12}s both` : "none",
+    transform: hovered ? "translateY(-6px) scale(1.02)" : "translateY(0) scale(1)",
+    transition: "transform 0.22s ease, box-shadow 0.22s ease",
+    display: "flex", flexDirection: "column", justifyContent: "space-between",
+    userSelect: "none", flexShrink: 0, flex: "1 1 240px", minWidth: 220,
+    ...extra,
+  };
+}
+
+/* EMV chip */
+function Chip({ color = "#c8a832" }) {
+  return (
+    <div style={{
+      width: 38, height: 30,
+      background: `linear-gradient(135deg, ${color} 0%, #f5e070 50%, ${color} 100%)`,
+      borderRadius: 5, border: "1px solid rgba(0,0,0,0.15)",
+      display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+      gridTemplateRows: "1fr 1fr 1fr", gap: 2, padding: 3, flexShrink: 0,
+    }}>
+      {[...Array(9)].map((_, i) => (
+        <div key={i} style={{ background: "rgba(0,0,0,0.12)", borderRadius: 1 }} />
+      ))}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Amex Platinum — matches the real card layout
+───────────────────────────────────────────── */
+function AmexPlatinumCard({ card, index, visible }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={cardShell(hovered, index, visible, {
+        background: "linear-gradient(145deg, #c0c8d0 0%, #d4dce4 18%, #e4ecf2 34%, #eef4f8 48%, #e6eef4 62%, #d0d8e0 78%, #bcc4cc 92%, #b4bcc4 100%)",
+      })}
+    >
+      {/* Metallic sheen overlay */}
+      <div style={{
+        position: "absolute", inset: 0, borderRadius: 18, pointerEvents: "none",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.05) 45%, rgba(0,0,0,0.04) 100%)",
+      }} />
+      {/* Shimmer */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)",
+        backgroundSize: "600px 100%", animation: "shimmer 5s infinite linear",
+      }} />
+      {/* Decorative border (like the real card) */}
+      <div style={{
+        position: "absolute", inset: 7, borderRadius: 13, pointerEvents: "none",
+        border: "1px solid rgba(40,50,60,0.2)",
+      }} />
+
+      {/* ── AMERICAN EXPRESS at top ── */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        textAlign: "center",
+        fontFamily: "Arial Black, sans-serif",
+        fontSize: 12, fontWeight: 900,
+        color: "rgba(28,36,46,0.82)",
+        letterSpacing: 2.5,
+      }}>
+        AMERICAN EXPRESS
+      </div>
+
+      {/* ── Middle: chip · centurion oval · right info ── */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+      }}>
+        {/* Chip on left */}
+        <Chip color="#b8a030" />
+
+        {/* Centurion in oval — the signature Amex feature */}
+        <div style={{
+          width: 82, height: 88,
+          borderRadius: "50%",
+          border: "2px solid rgba(28,36,46,0.45)",
+          background: "linear-gradient(135deg, rgba(200,210,220,0.4) 0%, rgba(160,172,182,0.3) 100%)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden", flexShrink: 0, position: "relative",
+          boxShadow: "inset 0 1px 3px rgba(0,0,0,0.12)",
+        }}>
+          <svg viewBox="0 0 58 80" style={{ width: 70, height: 86 }} fill="rgba(28,36,46,0.75)">
+            {/* ── Horsehair plume — multiple thin strands ── */}
+            <path d="M22,2 C20,-2 17,1 19,7 L21,13 M26,1 C24,-3 21,1 23,8 L25,13 M29,0 C27,-4 24,0 26,7 L28,13 M32,1 C30,-3 27,0 29,7 L31,13 M36,2 C34,-2 31,1 33,7 L35,13" fill="none" stroke="rgba(28,36,46,0.75)" strokeWidth="2" strokeLinecap="round" />
+            {/* Plume base connector */}
+            <path d="M19,11 Q29,7 39,11 L38,18 L20,18 Z" />
+
+            {/* ── Helmet dome (Corinthian-style) ── */}
+            <path d="M8,32 C8,18 16,12 29,12 C42,12 50,18 50,32 C50,44 44,50 29,50 C14,50 8,44 8,32 Z" />
+            {/* Helmet brim */}
+            <path d="M4,36 L54,36 L56,43 L2,43 Z" />
+            {/* Left cheek guard */}
+            <path d="M4,43 Q2,52 5,58 Q10,54 11,47 Z" />
+
+            {/* ── Face visor opening ── */}
+            <path d="M20,26 C22,18 28,15 36,19 C44,23 46,33 43,40 C41,45 36,48 29,46 C22,44 18,38 20,30 Z"
+              fill="rgba(195,208,220,0.65)" />
+            {/* Eye */}
+            <circle cx="38" cy="27" r="2.5" />
+            {/* Nose bridge (profile protrusion) */}
+            <path d="M45,22 L53,31 L48,36" fill="none" stroke="rgba(28,36,46,0.75)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Lips / chin line */}
+            <path d="M40,43 C43,47 44,52 42,56" fill="none" stroke="rgba(28,36,46,0.6)" strokeWidth="1.4" strokeLinecap="round" />
+
+            {/* ── Neck gorget ── */}
+            <rect x="22" y="48" width="14" height="10" rx="3" />
+
+            {/* ── Pauldrons ── */}
+            <path d="M0,58 C8,52 17,54 29,56 C41,54 50,52 58,60 L56,68 C46,64 38,62 29,64 C20,62 12,64 2,68 Z" />
+
+            {/* ── Breastplate / cuirass ── */}
+            <path d="M2,68 L56,68 L52,80 L6,80 Z" />
+            {/* Centre sternum line */}
+            <line x1="29" y1="68" x2="29" y2="80" stroke="rgba(28,36,46,0.22)" strokeWidth="1" />
+            {/* Pectoral muscle line */}
+            <path d="M13,74 Q29,70 45,74" fill="none" stroke="rgba(28,36,46,0.28)" strokeWidth="1.3" />
+          </svg>
+        </div>
+
+        {/* Right: contactless + last 4 + member since */}
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
+          <div style={{ fontSize: 15, color: "rgba(28,36,46,0.6)", lineHeight: 1 }}>
+            &#x29B8;&#x29B8;
+          </div>
+          <div style={{
+            fontFamily: "Courier New, monospace", fontWeight: 700,
+            fontSize: 12, color: "rgba(28,36,46,0.7)", marginTop: 3,
+          }}>
+            {card.number.slice(-4)}
+          </div>
+          <div style={{ marginTop: 6 }}>
+            <div style={{
+              border: "1px solid rgba(28,36,46,0.35)", borderRadius: 3,
+              padding: "1px 3px", fontSize: 7, fontWeight: 800,
+              color: "rgba(28,36,46,0.55)", letterSpacing: 0.4, textAlign: "center",
+            }}>MEMBER SINCE</div>
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: "rgba(28,36,46,0.65)",
+              textAlign: "center", marginTop: 1,
+            }}>09</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Bottom: name + points · AMEX ── */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+      }}>
+        <div>
+          <div style={{
+            fontSize: 13, fontWeight: 800,
+            color: "rgba(28,36,46,0.82)", letterSpacing: 1, textTransform: "uppercase",
+          }}>
+            {card.holder}
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(28,36,46,0.5)", marginTop: 1, fontWeight: 600 }}>
+            {card.points} MR pts
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{
+            fontSize: 10, fontWeight: 900, letterSpacing: 2,
+            color: "rgba(28,36,46,0.55)", fontFamily: "Arial Black, sans-serif",
+          }}>AMEX</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   CreditCard — generic layout (Chase, Apple, etc.)
 ───────────────────────────────────────────── */
 function CreditCard({ card, index, visible }) {
   const [hovered, setHovered] = useState(false);
+
+  if (card.id === "amex-platinum") {
+    return <AmexPlatinumCard card={card} index={index} visible={visible} />;
+  }
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        width: "100%",
-        maxWidth: 320,
-        aspectRatio: "1.586 / 1",
-        borderRadius: 20,
+      style={cardShell(hovered, index, visible, {
         background: card.gradient,
-        padding: "22px 24px",
-        position: "relative",
-        overflow: "hidden",
-        cursor: "pointer",
         border: card.id === "apple" ? "1px solid #ddd" : "none",
-        boxShadow: hovered
-          ? "0 20px 48px rgba(0,0,0,0.38)"
-          : "0 6px 24px rgba(0,0,0,0.22)",
-        animation: visible ? `cardIn 0.5s ease ${index * 0.12}s both` : "none",
-        transform: hovered ? "translateY(-6px) scale(1.02)" : "translateY(0) scale(1)",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        userSelect: "none",
-        flexShrink: 0,
-        flex: "1 1 240px",
-        minWidth: 220,
-      }}
+      })}
     >
       {/* Gloss overlay */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: "45%",
         background: "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%)",
-        borderRadius: "20px 20px 0 0", pointerEvents: "none",
+        borderRadius: "18px 18px 0 0", pointerEvents: "none",
       }} />
-      {/* Shimmer sweep */}
+      {/* Shimmer */}
       <div style={{
-        position: "absolute", inset: 0,
+        position: "absolute", inset: 0, pointerEvents: "none",
         background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)",
-        backgroundSize: "600px 100%",
-        animation: "shimmer 4s infinite linear",
-        pointerEvents: "none",
+        backgroundSize: "600px 100%", animation: "shimmer 4s infinite linear",
       }} />
-
-      {/* Amex Platinum: brushed metal texture */}
-      {card.id === "amex-platinum" && (
-        <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: "repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 3px)",
-          borderRadius: 20,
-        }} />
-      )}
-      {/* Amex Platinum: centurion watermark */}
-      {card.id === "amex-platinum" && <CenturionWatermark />}
 
       {/* Chase Sapphire: gem radial glow */}
       {card.id === "chase" && (
         <div style={{
           position: "absolute", top: "20%", left: "55%",
           width: 180, height: 180,
-          background: "radial-gradient(circle, rgba(80,130,220,0.35) 0%, rgba(30,70,160,0.1) 50%, transparent 75%)",
+          background: "radial-gradient(circle, rgba(80,130,220,0.35) 0%, transparent 70%)",
           borderRadius: "50%", pointerEvents: "none",
           transform: "translate(-50%,-50%)",
         }} />
       )}
 
-      {/* Apple Card: centered Apple logo watermark */}
+      {/* Apple Card: Apple logo watermark */}
       {card.id === "apple" && (
         <svg viewBox="0 0 814 1000" style={{
           position: "absolute", left: "50%", top: "46%",
@@ -354,7 +509,7 @@ function CreditCard({ card, index, visible }) {
         </svg>
       )}
 
-      {/* Top row: program icon + name + chip */}
+      {/* Top: program badge + card name + chip */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <ProgramIcon cardId={card.id} />
@@ -362,30 +517,12 @@ function CreditCard({ card, index, visible }) {
             {card.shortName}
           </div>
         </div>
-        {/* EMV Chip */}
-        <div style={{
-          width: 38, height: 30,
-          background: `linear-gradient(135deg, ${card.chipColor} 0%, #f5e070 50%, ${card.chipColor} 100%)`,
-          borderRadius: 5,
-          border: "1px solid rgba(0,0,0,0.12)",
-          display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
-          gridTemplateRows: "1fr 1fr 1fr", gap: 2, padding: 3,
-        }}>
-          {[...Array(9)].map((_, i) => (
-            <div key={i} style={{ background: "rgba(0,0,0,0.12)", borderRadius: 1 }} />
-          ))}
-        </div>
+        <Chip color={card.chipColor} />
       </div>
 
-      {/* Points — large number */}
+      {/* Points */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        <div style={{
-          fontSize: "clamp(28px, 5vw, 38px)",
-          fontWeight: 800,
-          color: card.textColor,
-          lineHeight: 1,
-          letterSpacing: -1,
-        }}>
+        <div style={{ fontSize: "clamp(28px, 5vw, 38px)", fontWeight: 800, color: card.textColor, lineHeight: 1, letterSpacing: -1 }}>
           {card.points}
         </div>
         <div style={{ fontSize: 11, color: card.textColor, opacity: 0.5, marginTop: 3, fontWeight: 600, letterSpacing: 0.6 }}>
@@ -393,18 +530,12 @@ function CreditCard({ card, index, visible }) {
         </div>
       </div>
 
-      {/* Bottom row: cardholder + number + network */}
+      {/* Bottom: cardholder + number + network */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
         <div>
-          <div style={{ fontSize: 9, color: card.textColor, opacity: 0.45, letterSpacing: 1.5, marginBottom: 2, fontWeight: 700 }}>
-            CARD HOLDER
-          </div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: card.textColor, letterSpacing: 0.5, textTransform: "uppercase" }}>
-            {card.holder}
-          </div>
-          <div style={{ fontSize: 11, color: card.textColor, opacity: 0.4, marginTop: 2, letterSpacing: 1.5, fontFamily: "'Courier New', monospace" }}>
-            {card.number}
-          </div>
+          <div style={{ fontSize: 9, color: card.textColor, opacity: 0.45, letterSpacing: 1.5, marginBottom: 2, fontWeight: 700 }}>CARD HOLDER</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: card.textColor, letterSpacing: 0.5, textTransform: "uppercase" }}>{card.holder}</div>
+          <div style={{ fontSize: 11, color: card.textColor, opacity: 0.4, marginTop: 2, letterSpacing: 1.5, fontFamily: "'Courier New', monospace" }}>{card.number}</div>
         </div>
         <NetworkLogo type={card.logoEl} />
       </div>
