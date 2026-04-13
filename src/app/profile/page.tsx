@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import {
@@ -41,6 +42,10 @@ import {
   Globe,
   Briefcase,
   Heart,
+  Link2,
+  Link2Off,
+  Zap,
+  Loader2,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────
@@ -612,6 +617,180 @@ function WishlistEditor({
 }
 
 /* ─────────────────────────────────────────────
+   Award Wallet Section
+───────────────────────────────────────────── */
+function AwardWalletSection({
+  onSynced,
+  onToast,
+}: {
+  onSynced: (balances: { programId: string; balance: number; lastSyncedAt: string }[]) => void;
+  onToast: (msg: string) => void;
+}) {
+  const [connected, setConnected] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Check connection status
+    fetch("/api/award-wallet/status")
+      .then((r) => r.json())
+      .then((data) => {
+        setConnected(data.connected ?? false);
+        setLastSyncedAt(data.lastSyncedAt ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    // Handle redirect back from AW OAuth
+    const connectedParam = searchParams.get("connected");
+    const errorParam = searchParams.get("error");
+    if (connectedParam === "1") {
+      setConnected(true);
+      onToast("Award Wallet connected!");
+      // Remove param from URL without reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete("connected");
+      window.history.replaceState({}, "", url.toString());
+    }
+    if (errorParam) {
+      const messages: Record<string, string> = {
+        aw_auth_denied: "AW connection cancelled.",
+        aw_auth_failed: "Award Wallet authorisation failed.",
+        aw_state_mismatch: "Security check failed — please try again.",
+        aw_session_missing: "Session expired — please try again.",
+        aw_not_configured: "Award Wallet credentials not yet configured.",
+        aw_token_exchange_failed: "Could not exchange authorisation code. Please try again.",
+      };
+      onToast(messages[errorParam] ?? "Award Wallet error.");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      window.history.replaceState({}, "", url.toString());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/award-wallet/sync", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        onToast(data.error ?? "Sync failed. Please try again.");
+        return;
+      }
+      const { balances, syncedAt } = await res.json();
+      setLastSyncedAt(syncedAt ?? new Date().toISOString());
+      onSynced(balances ?? []);
+      onToast(`Synced ${balances?.length ?? 0} program${balances?.length !== 1 ? "s" : ""}`);
+    } catch {
+      onToast("Sync failed. Check your connection.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleDisconnect() {
+    try {
+      await fetch("/api/award-wallet/disconnect", { method: "DELETE" });
+    } catch {
+      // best-effort
+    }
+    setConnected(false);
+    setLastSyncedAt(null);
+    onToast("Award Wallet disconnected");
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 py-3 text-sm text-text-muted">
+        <Loader2 size={14} className="animate-spin" />
+        Checking Award Wallet status…
+      </div>
+    );
+  }
+
+  if (connected) {
+    return (
+      <div className="space-y-4">
+        {/* Connected state */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+              <Link2 size={16} className="text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-navy">Connected</p>
+              <p className="text-xs text-text-muted">
+                {lastSyncedAt ? `Last synced ${formatLastSynced(lastSyncedAt)}` : "Never synced"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-1.5 bg-coral text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-coral/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              {syncing ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <RefreshCw size={13} />
+              )}
+              {syncing ? "Syncing…" : "Sync now"}
+            </button>
+            <button
+              onClick={handleDisconnect}
+              className="flex items-center gap-1.5 text-sm font-medium text-text-muted hover:text-red-400 hover:bg-red-50 px-3 py-2 rounded-xl transition-colors cursor-pointer"
+            >
+              <Link2Off size={13} />
+              Disconnect
+            </button>
+          </div>
+        </div>
+
+        {isStale(lastSyncedAt) && lastSyncedAt && (
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm text-amber-700">
+            <AlertTriangle size={13} className="text-amber-500 shrink-0" />
+            Your balances haven't been synced recently. Click "Sync now" to refresh.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Disconnected state */}
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-navy/5 flex items-center justify-center shrink-0">
+          <Zap size={20} className="text-coral" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-navy mb-1">
+            Sync all your loyalty balances automatically
+          </p>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Connect Award Wallet to automatically import balances from 700+ loyalty programs —
+            no manual entry needed.
+          </p>
+        </div>
+      </div>
+      <a
+        href="/api/award-wallet/authorize"
+        className="inline-flex items-center gap-2 bg-navy text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-navy/90 transition-colors"
+      >
+        <Link2 size={14} />
+        Connect Award Wallet
+      </a>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    Main page
 ───────────────────────────────────────────── */
 export default function ProfilePage() {
@@ -647,6 +826,22 @@ export default function ProfilePage() {
   function updatePrograms(programs: ProgramBalance[]) {
     if (!profile) return;
     save({ ...profile, programs });
+  }
+
+  function handleAwSynced(
+    balances: { programId: string; balance: number; lastSyncedAt: string }[]
+  ) {
+    if (!profile) return;
+    const updated = [...profile.programs];
+    for (const b of balances) {
+      const idx = updated.findIndex((p) => p.programId === b.programId);
+      if (idx >= 0) {
+        updated[idx] = { ...updated[idx], balance: b.balance, lastSyncedAt: b.lastSyncedAt };
+      } else {
+        updated.push({ programId: b.programId, balance: b.balance, lastSyncedAt: b.lastSyncedAt });
+      }
+    }
+    save({ ...profile, programs: updated });
   }
 
   if (!profile) return null;
@@ -771,6 +966,18 @@ export default function ProfilePage() {
             onAdd={(id) =>
               updatePrograms([...profile.programs, { programId: id, balance: 0, lastSyncedAt: null }])
             }
+          />
+        </Section>
+
+        {/* ── Award Wallet ── */}
+        <Section
+          icon={<Zap size={17} />}
+          title="Award Wallet"
+          subtitle="Automatically sync balances from 700+ loyalty programs"
+        >
+          <AwardWalletSection
+            onSynced={handleAwSynced}
+            onToast={(msg) => setToast(msg)}
           />
         </Section>
 
