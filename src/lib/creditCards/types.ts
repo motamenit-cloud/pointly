@@ -3,11 +3,11 @@
    Single source of truth for all credit card data shapes used across Pointly.
 ───────────────────────────────────────────────────────────────────────────── */
 
-export type Issuer = "amex" | "chase" | "citi" | "capital-one" | "apple" | "other";
+export type Issuer = "amex" | "chase" | "citi" | "capital-one" | "apple" | "bilt" | "wells-fargo" | "bank-of-america" | "discover" | "other";
 export type Network = "visa" | "mastercard" | "amex" | "discover";
-export type CardType = "travel" | "cashback" | "business" | "student";
+export type CardType = "travel" | "cashback" | "business" | "student" | "rent" | "hotel" | "airline";
 export type PartnerCategory = "airline" | "hotel";
-export type LogoEl = "amex" | "visa" | "mc";
+export type LogoEl = "amex" | "visa" | "mc" | "discover";
 
 /** A single earning rate rule for a spending category */
 export interface EarningRate {
