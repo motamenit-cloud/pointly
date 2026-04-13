@@ -3,9 +3,20 @@ export interface ProgramBalance {
   balance: number;
 }
 
+export interface TravelPreferences {
+  preferredCabin: "economy" | "premium-economy" | "business" | "first";
+  seatPreference: "window" | "aisle" | "no-preference";
+  tripStyle: "leisure" | "business" | "mixed";
+  tripsPerYear: "1-2" | "3-5" | "6-10" | "10+";
+  preferredAirlines: string[];   // airline program IDs e.g. ["united", "delta"]
+  preferredHotels: string[];     // hotel program IDs e.g. ["hyatt", "marriott"]
+  wishlistDestinations: string[]; // free-text destination names
+}
+
 export interface UserProfile {
   homeAirport: string | null;
   programs: ProgramBalance[];
+  preferences?: TravelPreferences;
 }
 
 export interface UserAccount {
@@ -60,3 +71,13 @@ export function getTotalPoints(): number {
   if (!profile) return 0;
   return profile.programs.reduce((sum, p) => sum + p.balance, 0);
 }
+
+export const DEFAULT_PREFERENCES: TravelPreferences = {
+  preferredCabin: "business",
+  seatPreference: "window",
+  tripStyle: "mixed",
+  tripsPerYear: "3-5",
+  preferredAirlines: [],
+  preferredHotels: [],
+  wishlistDestinations: [],
+};

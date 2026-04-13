@@ -205,7 +205,7 @@ export function Header() {
                       )}
                     </div>
                     <a
-                      href="#"
+                      href="/profile"
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy hover:bg-sky-light transition-colors"
                     >
                       <User size={15} className="text-text-muted" />
@@ -342,7 +342,7 @@ export function Header() {
               )}
 
               <a
-                href="#"
+                href="/profile"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-navy hover:bg-navy/5 transition-colors"
               >
