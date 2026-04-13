@@ -16,6 +16,11 @@ import {
 } from "@/lib/userProfile";
 import { AIRPORTS, POINTS_PROGRAMS } from "@/components/onboarding/airports";
 import {
+  PROGRAM_BALANCE_URLS,
+  isStale,
+  formatLastSynced,
+} from "@/lib/programLinks";
+import {
   User,
   MapPin,
   CreditCard,
@@ -28,6 +33,10 @@ import {
   Edit3,
   X,
   ChevronDown,
+  ExternalLink,
+  Clipboard,
+  RefreshCw,
+  AlertTriangle,
   Star,
   Globe,
   Briefcase,
@@ -213,73 +222,205 @@ function AirportSearch({
 }
 
 /* ─────────────────────────────────────────────
-   Points program row (editable)
+   Points program row (editable + sync)
 ───────────────────────────────────────────── */
 function ProgramRow({
   programId,
   balance,
+  lastSyncedAt,
   onBalanceChange,
   onRemove,
 }: {
   programId: string;
   balance: number;
-  onBalanceChange: (v: number) => void;
+  lastSyncedAt?: string | null;
+  onBalanceChange: (v: number, syncedAt: string) => void;
   onRemove: () => void;
 }) {
   const meta = getProgramMeta(programId);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(balance));
+  const [awaitingPaste, setAwaitingPaste] = useState(false);
+  const [pasteError, setPasteError] = useState("");
+  const stale = isStale(lastSyncedAt);
+  const balanceUrl = PROGRAM_BALANCE_URLS[programId];
 
-  function commit() {
-    const n = parseInt(draft.replace(/,/g, ""), 10);
-    if (!isNaN(n) && n >= 0) onBalanceChange(n);
+  function commit(value?: string) {
+    const raw = (value ?? draft).replace(/[^0-9]/g, "");
+    const n = parseInt(raw, 10);
+    if (!isNaN(n) && n >= 0) onBalanceChange(n, new Date().toISOString());
     else setDraft(String(balance));
     setEditing(false);
+    setAwaitingPaste(false);
+    setPasteError("");
+  }
+
+  async function handlePaste() {
+    setPasteError("");
+    try {
+      const text = await navigator.clipboard.readText();
+      const match = text.replace(/,/g, "").match(/\d+/);
+      if (match) {
+        setDraft(match[0]);
+        setEditing(true);
+        setAwaitingPaste(false);
+      } else {
+        setPasteError("No number found in clipboard");
+      }
+    } catch {
+      setPasteError("Allow clipboard access to use this feature");
+    }
+  }
+
+  function openBalancePage() {
+    if (balanceUrl) {
+      window.open(balanceUrl, "_blank", "noopener,noreferrer");
+      setAwaitingPaste(true);
+    }
   }
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-navy/5 last:border-0">
-      {/* Color dot + name */}
-      <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-        style={{ background: meta?.color ?? "#64748b" }}
-      >
-        {meta?.iconLetter ?? programId[0].toUpperCase()}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-navy truncate">
-          {meta?.shortName ?? programId}
-        </p>
-        <p className="text-xs text-text-muted capitalize">{meta?.category}</p>
+    <div className={`py-3.5 border-b border-navy/5 last:border-0 ${stale ? "opacity-100" : ""}`}>
+      <div className="flex items-center gap-3">
+        {/* Icon */}
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm"
+          style={{ background: meta?.color ?? "#64748b" }}
+        >
+          {meta?.iconLetter ?? programId[0].toUpperCase()}
+        </div>
+
+        {/* Name + sync status */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-navy truncate">{meta?.shortName ?? programId}</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {stale && lastSyncedAt !== undefined && (
+              <AlertTriangle size={10} className="text-amber-400 shrink-0" />
+            )}
+            <p className={`text-xs ${stale ? "text-amber-500" : "text-text-muted"}`}>
+              {formatLastSynced(lastSyncedAt)}
+            </p>
+          </div>
+        </div>
+
+        {/* Balance editor */}
+        {editing ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              autoFocus
+              className="w-28 text-right text-sm font-semibold text-navy bg-navy/5 border border-navy/15 rounded-lg px-2 py-1.5 outline-none focus:border-coral/40"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={() => commit()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commit();
+                if (e.key === "Escape") { setEditing(false); setDraft(String(balance)); setAwaitingPaste(false); }
+              }}
+            />
+            <button
+              onClick={() => commit()}
+              className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition-colors cursor-pointer shrink-0"
+            >
+              <Check size={13} />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => { setEditing(true); setDraft(String(balance)); }}
+            className="flex items-center gap-1.5 text-sm font-bold text-navy hover:text-coral transition-colors cursor-pointer group"
+          >
+            <span>{balance.toLocaleString("en-US")}</span>
+            <Edit3 size={11} className="text-text-muted group-hover:text-coral transition-colors" />
+          </button>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 ml-1">
+          {balanceUrl && (
+            <button
+              onClick={openBalancePage}
+              title="Open balance page"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:text-coral hover:bg-coral/8 transition-colors cursor-pointer"
+            >
+              <ExternalLink size={13} />
+            </button>
+          )}
+          <button
+            onClick={handlePaste}
+            title="Paste balance from clipboard"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:text-coral hover:bg-coral/8 transition-colors cursor-pointer"
+          >
+            <Clipboard size={13} />
+          </button>
+          <button
+            onClick={onRemove}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:text-red-400 hover:bg-red-50 transition-colors cursor-pointer"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
       </div>
 
-      {/* Balance */}
-      {editing ? (
-        <div className="flex items-center gap-2">
-          <input
-            autoFocus
-            className="w-28 text-right text-sm font-semibold text-navy bg-navy/5 border border-navy/15 rounded-lg px-2 py-1 outline-none"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setEditing(false); setDraft(String(balance)); } }}
-          />
+      {/* Awaiting paste helper */}
+      {awaitingPaste && !editing && (
+        <div className="mt-2 ml-12 flex items-center gap-2 text-xs text-coral bg-coral/8 border border-coral/15 rounded-lg px-3 py-2">
+          <Clipboard size={11} />
+          <span>Copy your balance on that page, then click the clipboard icon here to paste it.</span>
+          <button onClick={() => setAwaitingPaste(false)} className="ml-auto text-coral/60 hover:text-coral cursor-pointer">
+            <X size={11} />
+          </button>
         </div>
-      ) : (
-        <button
-          onClick={() => { setEditing(true); setDraft(String(balance)); }}
-          className="flex items-center gap-1.5 text-sm font-bold text-navy hover:text-coral transition-colors cursor-pointer group"
-        >
-          <span>{balance.toLocaleString("en-US")}</span>
-          <Edit3 size={12} className="text-text-muted group-hover:text-coral transition-colors" />
-        </button>
       )}
 
+      {pasteError && (
+        <p className="mt-1.5 ml-12 text-xs text-amber-500">{pasteError}</p>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Sync status banner
+───────────────────────────────────────────── */
+function SyncStatusBanner({ programs }: { programs: ProgramBalance[] }) {
+  const stalePrograms = programs.filter((p) => isStale(p.lastSyncedAt));
+
+  function openAllStale() {
+    stalePrograms.forEach((p, i) => {
+      const url = PROGRAM_BALANCE_URLS[p.programId];
+      if (url) {
+        setTimeout(() => window.open(url, "_blank", "noopener,noreferrer"), i * 800);
+      }
+    });
+  }
+
+  if (programs.length === 0) return null;
+
+  if (stalePrograms.length === 0) {
+    return (
+      <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-4">
+        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+          <Check size={12} className="text-emerald-600" />
+        </div>
+        <p className="text-sm font-medium text-emerald-700">All balances are up to date</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4">
+      <div className="flex items-center gap-2.5">
+        <AlertTriangle size={15} className="text-amber-500 shrink-0" />
+        <p className="text-sm font-medium text-amber-800">
+          {stalePrograms.length} balance{stalePrograms.length > 1 ? "s" : ""} need{stalePrograms.length === 1 ? "s" : ""} updating
+        </p>
+      </div>
       <button
-        onClick={onRemove}
-        className="ml-1 text-text-muted hover:text-red-400 transition-colors cursor-pointer p-1"
+        onClick={openAllStale}
+        className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
       >
-        <Trash2 size={14} />
+        <RefreshCw size={11} />
+        Sync all
       </button>
     </div>
   );
@@ -595,8 +736,10 @@ export default function ProfilePage() {
         <Section
           icon={<CreditCard size={17} />}
           title="Points & Miles"
-          subtitle="Tap a balance to edit it inline"
+          subtitle="Tap ✏️ to edit · ↗ to open balance page · 📋 to paste from clipboard"
         >
+          <SyncStatusBanner programs={profile.programs} />
+
           {profile.programs.length === 0 ? (
             <p className="text-sm text-text-muted italic">No programs added yet.</p>
           ) : (
@@ -606,10 +749,13 @@ export default function ProfilePage() {
                   key={p.programId}
                   programId={p.programId}
                   balance={p.balance}
-                  onBalanceChange={(v) =>
+                  lastSyncedAt={p.lastSyncedAt}
+                  onBalanceChange={(v, syncedAt) =>
                     updatePrograms(
                       profile.programs.map((x) =>
-                        x.programId === p.programId ? { ...x, balance: v } : x
+                        x.programId === p.programId
+                          ? { ...x, balance: v, lastSyncedAt: syncedAt }
+                          : x
                       )
                     )
                   }
@@ -623,7 +769,7 @@ export default function ProfilePage() {
           <AddProgramDropdown
             existingIds={profile.programs.map((p) => p.programId)}
             onAdd={(id) =>
-              updatePrograms([...profile.programs, { programId: id, balance: 0 }])
+              updatePrograms([...profile.programs, { programId: id, balance: 0, lastSyncedAt: null }])
             }
           />
         </Section>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/Header";
+import { formatLastSynced, isStale } from "@/lib/programLinks";
+import { getUserProfile } from "@/lib/userProfile";
 
 const KEYFRAMES = `
   @keyframes shimmer {
@@ -796,15 +798,38 @@ export default function WalletPage() {
         const cardCatalog = await cardsRes.json();
         const offers = await offersRes.json();
 
+        // Load user profile for lastSyncedAt timestamps
+        const userProfile = getUserProfile();
+        // Map card apiId → profile programId (wallet cards to loyalty program IDs)
+        const CARD_TO_PROGRAM = {
+          "amex-platinum":            "amex-mr",
+          "amex-gold":                "amex-mr",
+          "chase-sapphire-preferred": "chase-ur",
+          "chase-sapphire-reserve":   "chase-ur",
+          "chase-freedom-unlimited":  "chase-ur",
+          "chase-ink-business-preferred": "chase-ur",
+          "citi-premier":             "citi-ty",
+          "citi-double-cash":         "citi-ty",
+          "capital-one-venture-x":    "cap1-miles",
+          "capital-one-venture":      "cap1-miles",
+          "bilt-mastercard":          "bilt",
+          "apple-card":               null, // cashback, no program
+        };
+
         // Merge catalog data with the user's wallet seed (points balance, card number, etc.)
         const merged = WALLET_CARDS_SEED
           .map((seed) => {
             const meta = cardCatalog.find((c) => c.id === seed.apiId);
             if (!meta) return null;
+            const programId = CARD_TO_PROGRAM[seed.apiId] ?? null;
+            const programEntry = programId
+              ? userProfile?.programs?.find((p) => p.programId === programId)
+              : null;
             return {
               ...meta,
               ...seed,        // seed overrides: holder, number, pointsRaw, points, gradient overrides
               id: seed.apiId, // ensure id is consistent
+              lastSyncedAt: programEntry?.lastSyncedAt ?? null,
             };
           })
           .filter(Boolean)
@@ -883,11 +908,16 @@ export default function WalletPage() {
             <div key={card.id} style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
               <CreditCard card={card} index={i} visible={cardsVisible} />
               <div style={{
-                fontSize: 13, fontWeight: 700, color: "#4A6B8A",
                 opacity: cardsVisible ? 1 : 0,
                 transition: `opacity 0.5s ease ${i * 0.12 + 0.4}s`,
+                textAlign: "center",
               }}>
-                ≈ {formatValue(card.pointsRaw, card.cpp)} est. value
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#4A6B8A" }}>
+                  ≈ {formatValue(card.pointsRaw, card.cpp)} est. value
+                </div>
+                <div style={{ fontSize: 11, color: isStale(card.lastSyncedAt) ? "#f59e0b" : "#94a3b8", marginTop: 2 }}>
+                  {formatLastSynced(card.lastSyncedAt)}
+                </div>
               </div>
               {/* Benefit pills */}
               <div style={{
@@ -918,11 +948,16 @@ export default function WalletPage() {
               <div key={card.id} style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
                 <CreditCard card={card} index={primaryCards.length + i} visible={cardsVisible} />
                 <div style={{
-                  fontSize: 13, fontWeight: 700, color: "#4A6B8A",
                   opacity: cardsVisible ? 1 : 0,
                   transition: `opacity 0.5s ease ${(primaryCards.length + i) * 0.12 + 0.4}s`,
+                  textAlign: "center",
                 }}>
-                  ≈ {formatValue(card.pointsRaw, card.cpp)} est. value
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#4A6B8A" }}>
+                    ≈ {formatValue(card.pointsRaw, card.cpp)} est. value
+                  </div>
+                  <div style={{ fontSize: 11, color: isStale(card.lastSyncedAt) ? "#f59e0b" : "#94a3b8", marginTop: 2 }}>
+                    {formatLastSynced(card.lastSyncedAt)}
+                  </div>
                 </div>
                 {/* Benefit pills */}
                 <div style={{

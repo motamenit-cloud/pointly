@@ -1,6 +1,7 @@
 export interface ProgramBalance {
   programId: string;
   balance: number;
+  lastSyncedAt?: string | null; // ISO date string, set whenever balance is saved
 }
 
 export interface TravelPreferences {
