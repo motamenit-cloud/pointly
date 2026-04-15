@@ -15,7 +15,7 @@ import { POINTS_PROGRAMS } from "@/components/onboarding/airports";
 
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "Explore", href: "#" },
+  { label: "Deals", href: "/deals" },
   { label: "My Wallet", href: "/wallet" },
 ];
 
