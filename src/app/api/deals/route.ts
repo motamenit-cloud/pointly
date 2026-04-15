@@ -8,6 +8,9 @@ import {
   type TopRoute,
 } from "@/lib/deals/topRoutes";
 import { pickBestForRoute, rankDeals, type ScoredDeal } from "@/lib/deals/scorer";
+import type { AIResearchResult } from "@/lib/deals/aiResearch";
+
+const AI_DEALS_CACHE_KEY = "ai-deals:v1:latest";
 
 const DEALS_CACHE_TTL = 3600; // 1 hour
 const CONCURRENCY = 5;
@@ -116,6 +119,22 @@ async function scanRoutes(routes: TopRoute[], date: string): Promise<ScoredDeal[
   return results;
 }
 
+// ── AI deals reader ───────────────────────────────────────────────────────────
+
+async function getAIDeals(): Promise<AIResearchResult | null> {
+  const r = await getRedis();
+  if (!r) return null;
+  try {
+    const raw = await r.get(AI_DEALS_CACHE_KEY);
+    if (!raw) return null;
+    return typeof raw === "string"
+      ? (JSON.parse(raw) as AIResearchResult)
+      : (raw as AIResearchResult);
+  } catch {
+    return null;
+  }
+}
+
 // ── GET /api/deals ────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -155,16 +174,39 @@ export async function GET(request: NextRequest) {
   scanDate.setDate(scanDate.getDate() + 90);
   const date = scanDate.toISOString().split("T")[0];
 
-  try {
-    const deals = await scanRoutes(routes, date);
-    const ranked = rankDeals(deals, 30);
-    await setInCache(cacheKey, ranked);
-    return NextResponse.json({ deals: ranked, cached: false, scanDate: date });
-  } catch (err) {
-    console.error("[deals] Scan failed:", err);
+  // Fetch AI research deals in parallel with route scanning
+  const [aiResult, scanResult] = await Promise.allSettled([
+    getAIDeals(),
+    scanRoutes(routes, date),
+  ]);
+
+  const aiResearch =
+    aiResult.status === "fulfilled" ? aiResult.value : null;
+
+  if (scanResult.status === "rejected") {
+    console.error("[deals] Scan failed:", scanResult.reason);
+    // If we have AI deals, still return them
+    if (aiResearch) {
+      return NextResponse.json({
+        deals: [],
+        aiDeals: aiResearch,
+        cached: false,
+        error: "Route scan failed — showing AI research only",
+      });
+    }
     return NextResponse.json(
       { deals: [], error: "Scan failed" },
       { status: 500 },
     );
   }
+
+  const ranked = rankDeals(scanResult.value, 30);
+  await setInCache(cacheKey, ranked);
+
+  return NextResponse.json({
+    deals: ranked,
+    aiDeals: aiResearch ?? undefined,
+    cached: false,
+    scanDate: date,
+  });
 }

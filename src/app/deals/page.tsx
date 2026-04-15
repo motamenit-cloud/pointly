@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { DealCard } from "@/components/deals/DealCard";
+import { AIDealCard } from "@/components/deals/AIDealCard";
 import { getUserProfile, type UserProfile } from "@/lib/userProfile";
 import {
   personalizeResults,
   type PersonalizedFlight,
 } from "@/lib/personalizeResults";
 import { AIRPORTS } from "@/components/onboarding/airports";
-import { RefreshCw, Plane } from "lucide-react";
+import { RefreshCw, Plane, Sparkles } from "lucide-react";
 import type { ScoredDeal } from "@/lib/deals/scorer";
+import type { AIResearchResult } from "@/lib/deals/aiResearch";
 
 type PersonalizedDeal = ScoredDeal & Partial<PersonalizedFlight>;
 
@@ -34,6 +36,7 @@ function cityFromCode(code: string): string {
 
 export default function DealsPage() {
   const [personalizedDeals, setPersonalizedDeals] = useState<PersonalizedDeal[]>([]);
+  const [aiResearch, setAiResearch] = useState<AIResearchResult | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [cached, setCached] = useState(false);
@@ -52,6 +55,7 @@ export default function DealsPage() {
       const data = await res.json();
       const raw: ScoredDeal[] = data.deals ?? [];
       setCached(!!data.cached);
+      if (data.aiDeals) setAiResearch(data.aiDeals);
       const personalized = personalizeResults(
         raw,
         profileData,
@@ -128,6 +132,31 @@ export default function DealsPage() {
           </div>
         ) : (
           <>
+            {/* AI-curated deals — shown at top when available */}
+            {aiResearch && aiResearch.deals.length > 0 && (
+              <section className="mb-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles size={16} className="text-coral" />
+                  <h2 className="text-xl font-bold text-navy">
+                    AI-Curated: Today&apos;s Best Finds
+                  </h2>
+                  <span className="text-xs text-text-muted ml-1">
+                    · Researched {new Date(aiResearch.researchedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </span>
+                </div>
+                {aiResearch.summary && (
+                  <p className="text-sm text-text-muted mb-4 max-w-2xl">
+                    {aiResearch.summary}
+                  </p>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {aiResearch.deals.map((deal, i) => (
+                    <AIDealCard key={i} deal={deal} />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Home airport section */}
             {homeDeals.length > 0 && homeAirport && (
               <section className="mb-10">
