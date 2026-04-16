@@ -102,9 +102,8 @@ Return your findings as JSON.`;
   let fullText = "";
 
   const stream = await client.messages.stream({
-    model: "claude-opus-4-6",
-    max_tokens: 8000,
-    thinking: { type: "adaptive" },
+    model: "claude-sonnet-4-6",
+    max_tokens: 4000,
     system: [
       {
         type: "text",
