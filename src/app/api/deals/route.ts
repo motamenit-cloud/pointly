@@ -31,11 +31,11 @@ async function getRedis() {
   if (redisAttempted) return redis;
   redisAttempted = true;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
 
   if (!url || !token) {
-    console.log("[deals] No Upstash Redis configured, using in-memory cache");
+    console.log("[deals] No Redis configured, using in-memory cache");
     return null;
   }
 
