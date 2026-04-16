@@ -6,14 +6,14 @@ import { Footer } from "@/components/layout/Footer";
 import {
   getUserProfile,
   saveUserProfile,
-  getUserAccount,
-  saveUserAccount,
   DEFAULT_PREFERENCES,
   type UserProfile,
-  type UserAccount,
   type TravelPreferences,
   type ProgramBalance,
 } from "@/lib/userProfile";
+import { createClient } from "@/lib/supabase/client";
+import { loadProfileFromSupabase, saveProfileToSupabase } from "@/lib/supabase/profile";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { AIRPORTS, POINTS_PROGRAMS } from "@/components/onboarding/airports";
 import {
   PROGRAM_BALANCE_URLS,
@@ -684,7 +684,7 @@ function DirectSyncSection({
    Main page
 ───────────────────────────────────────────── */
 export default function ProfilePage() {
-  const [account, setAccount] = useState<UserAccount | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
@@ -692,19 +692,35 @@ export default function ProfilePage() {
 
   // Load data
   useEffect(() => {
-    setAccount(getUserAccount());
-    const p = getUserProfile();
-    if (p) {
-      setProfile({ ...p, preferences: p.preferences ?? DEFAULT_PREFERENCES });
-    } else {
-      setProfile({ homeAirport: null, programs: [], preferences: DEFAULT_PREFERENCES });
-    }
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user: u } }) => {
+      setUser(u);
+      if (u) {
+        // Try loading from Supabase first
+        const remoteProfile = await loadProfileFromSupabase(supabase, u.id);
+        if (remoteProfile) {
+          const merged = { ...remoteProfile, preferences: remoteProfile.preferences ?? DEFAULT_PREFERENCES };
+          setProfile(merged);
+          saveUserProfile(merged); // keep localStorage in sync
+          return;
+        }
+      }
+      // Fallback to localStorage
+      const p = getUserProfile();
+      setProfile(p ? { ...p, preferences: p.preferences ?? DEFAULT_PREFERENCES }
+        : { homeAirport: null, programs: [], preferences: DEFAULT_PREFERENCES });
+    });
   }, []);
 
   function save(updated: UserProfile) {
     setProfile(updated);
     saveUserProfile(updated);
     setToast("Changes saved");
+    // Sync to Supabase if signed in
+    if (user) {
+      const supabase = createClient();
+      saveProfileToSupabase(supabase, user.id, updated).catch(console.error);
+    }
   }
 
   function updatePrefs(patch: Partial<TravelPreferences>) {
@@ -722,9 +738,8 @@ export default function ProfilePage() {
 
   const prefs = profile.preferences ?? DEFAULT_PREFERENCES;
   const totalPoints = profile.programs.reduce((s, p) => s + p.balance, 0);
-  const initials = account?.name
-    ? account.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
-    : "?";
+  const displayName = user?.user_metadata?.name ?? user?.email?.split("@")[0] ?? "Your Profile";
+  const initials = displayName.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2) || "?";
 
   return (
     <div className="min-h-screen bg-cream">
@@ -745,11 +760,11 @@ export default function ProfilePage() {
                   className="text-2xl font-bold text-navy bg-transparent border-b-2 border-coral outline-none"
                   value={draftName}
                   onChange={(e) => setDraftName(e.target.value)}
-                  onBlur={() => {
-                    if (draftName.trim() && account) {
-                      const updated = { ...account, name: draftName.trim() };
-                      saveUserAccount(updated);
-                      setAccount(updated);
+                  onBlur={async () => {
+                    if (draftName.trim() && user) {
+                      const supabase = createClient();
+                      await supabase.auth.updateUser({ data: { name: draftName.trim() } });
+                      setUser((u) => u ? { ...u, user_metadata: { ...u.user_metadata, name: draftName.trim() } } : u);
                       setToast("Name updated");
                     }
                     setEditingName(false);
@@ -762,16 +777,16 @@ export default function ProfilePage() {
               </div>
             ) : (
               <button
-                onClick={() => { setDraftName(account?.name ?? ""); setEditingName(true); }}
+                onClick={() => { setDraftName(displayName); setEditingName(true); }}
                 className="flex items-center gap-2 group cursor-pointer"
               >
                 <h1 className="text-2xl font-bold text-navy group-hover:text-coral transition-colors">
-                  {account?.name ?? "Your Profile"}
+                  {displayName}
                 </h1>
                 <Edit3 size={15} className="text-text-muted group-hover:text-coral transition-colors" />
               </button>
             )}
-            <p className="text-sm text-text-muted mt-0.5">{account?.email}</p>
+            <p className="text-sm text-text-muted mt-0.5">{user?.email}</p>
           </div>
 
           {/* Total points badge */}
@@ -968,10 +983,10 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm font-semibold text-navy">Name</p>
-                <p className="text-sm text-text-muted">{account?.name ?? "—"}</p>
+                <p className="text-sm text-text-muted">{displayName}</p>
               </div>
               <button
-                onClick={() => { setDraftName(account?.name ?? ""); setEditingName(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                onClick={() => { setDraftName(displayName); setEditingName(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 className="text-xs font-semibold text-coral hover:text-coral/70 transition-colors cursor-pointer"
               >
                 Edit
@@ -981,20 +996,20 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm font-semibold text-navy">Email</p>
-                <p className="text-sm text-text-muted">{account?.email ?? "—"}</p>
+                <p className="text-sm text-text-muted">{user?.email ?? "—"}</p>
               </div>
             </div>
             <div className="border-t border-navy/5" />
             <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  localStorage.clear();
-                  window.location.href = "/";
-                }
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                localStorage.clear();
+                window.location.href = "/";
               }}
               className="text-sm font-semibold text-red-400 hover:text-red-500 transition-colors cursor-pointer"
             >
-              Sign out &amp; clear data
+              Sign out
             </button>
           </div>
         </Section>
