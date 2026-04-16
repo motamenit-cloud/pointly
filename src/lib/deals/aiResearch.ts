@@ -116,7 +116,8 @@ Return your findings as JSON.`;
       {
         type: "web_search_20260209",
         name: "web_search",
-      } as Parameters<typeof client.messages.stream>[0]["tools"][0],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
     ],
     messages: [{ role: "user", content: userMessage }],
   });
