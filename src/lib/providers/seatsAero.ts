@@ -1,3 +1,5 @@
+// seats.aero is optional — only active when SEATS_AERO_API_KEY is set.
+// Remove the env var to use AI-only deal research instead.
 import type {
   FlightProvider,
   SearchParams,
