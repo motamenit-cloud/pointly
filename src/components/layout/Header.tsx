@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { PointlyLogo } from "@/components/ui/PointlyLogo";
 import { createClient } from "@/lib/supabase/client";
 import { getTotalPoints, getUserProfile, type ProgramBalance } from "@/lib/userProfile";
 import { POINTS_PROGRAMS } from "@/components/onboarding/airports";
@@ -109,7 +110,7 @@ export function Header() {
     <>
       <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-navy/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <a href="/" className="text-2xl font-bold text-navy">Point.ly</a>
+          <a href="/" aria-label="Pointly home"><PointlyLogo height={30} /></a>
 
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
@@ -212,7 +213,7 @@ export function Header() {
         style={{ transform: menuOpen ? "translateX(0)" : "translateX(100%)" }}
       >
         <div className="flex items-center justify-between px-6 h-16 border-b border-navy/5">
-          <a href="/" className="text-xl font-bold text-navy" onClick={() => setMenuOpen(false)}>Point.ly</a>
+          <a href="/" aria-label="Pointly home" onClick={() => setMenuOpen(false)}><PointlyLogo height={26} /></a>
           <button onClick={() => setMenuOpen(false)} className="flex items-center justify-center w-9 h-9 rounded-xl text-navy hover:bg-navy/5 transition-colors cursor-pointer" aria-label="Close menu">
             <X size={20} />
           </button>
