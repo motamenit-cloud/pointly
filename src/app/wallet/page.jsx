@@ -503,6 +503,100 @@ function AmexPlatinumCard({ card, index, visible }) {
 }
 
 /* ─────────────────────────────────────────────
+   Apple Card — titanium white, ultra-minimal
+───────────────────────────────────────────── */
+function AppleCard({ card, index, visible }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={cardShell(hovered, index, visible, {
+        background: "linear-gradient(145deg, #f2f2f4 0%, #fafafa 28%, #ffffff 50%, #f4f4f6 75%, #ebebed 100%)",
+        border: "1px solid rgba(0,0,0,0.1)",
+        boxShadow: hovered ? "0 22px 52px rgba(0,0,0,0.22)" : "0 6px 24px rgba(0,0,0,0.12)",
+      })}
+    >
+      {/* Titanium brushed sheen */}
+      <div style={{
+        position: "absolute", inset: 0, borderRadius: 18, pointerEvents: "none",
+        background: "linear-gradient(120deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.2) 40%, rgba(200,200,210,0.15) 100%)",
+      }} />
+      {/* Subtle rainbow shimmer on hover — Apple's iridescent titanium effect */}
+      <div style={{
+        position: "absolute", inset: 0, borderRadius: 18, pointerEvents: "none",
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)",
+        backgroundSize: "600px 100%", animation: "shimmer 7s infinite linear",
+        opacity: hovered ? 1 : 0.5,
+        transition: "opacity 0.3s ease",
+      }} />
+
+      {/* Apple logo watermark — centered */}
+      <svg viewBox="0 0 814 1000" style={{
+        position: "absolute", left: "50%", top: "46%",
+        transform: "translate(-50%,-50%)",
+        width: 72, height: 72, opacity: 0.07, pointerEvents: "none",
+      }} fill="#1d1d1f">
+        <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-37.6-155.5-127.4C46 790.9 0 661.7 0 538.3 0 319 133.4 201.3 264.4 201.3c64.2 0 117.6 42.8 157.6 42.8 38.2 0 97.9-45.5 168.1-45.5 27.1 0 109.8 2.6 165.1 99.3zM538.2 130.3C507.4 162.8 460 188.9 410.3 188.9c-6.4 0-12.8-.6-19.2-1.9 2.6-49 24.7-99.3 56.5-132.5 35.1-36.5 88.3-63.9 138.9-66.5 2 6.4 3.2 12.8 3.2 19.8 0 47.5-20 95.5-51.5 122.5z"/>
+      </svg>
+
+      {/* Top: "apple card" wordmark — minimal, lower-case style */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{
+          fontSize: 11, fontWeight: 300, letterSpacing: 1.5,
+          color: "rgba(0,0,0,0.38)", fontFamily: "'Helvetica Neue', Helvetica, sans-serif",
+        }}>
+          apple card
+        </div>
+        {/* No chip on front — real Apple Card titanium has no numbers or chip on front */}
+      </div>
+
+      {/* Daily Cash balance */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <div style={{
+          fontSize: "clamp(26px,4.5vw,36px)", fontWeight: 600,
+          color: "#1d1d1f", lineHeight: 1, letterSpacing: -1,
+          fontFamily: "'Helvetica Neue', Helvetica, sans-serif",
+        }}>
+          {card.points}
+        </div>
+        <div style={{
+          fontSize: 10, color: "rgba(0,0,0,0.38)", marginTop: 3,
+          fontWeight: 400, letterSpacing: 1.2,
+          fontFamily: "'Helvetica Neue', Helvetica, sans-serif",
+        }}>
+          DAILY CASH
+        </div>
+      </div>
+
+      {/* Bottom: name + Mastercard */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+      }}>
+        <div>
+          <div style={{
+            fontSize: 13, fontWeight: 500, color: "rgba(0,0,0,0.72)",
+            letterSpacing: 1.5, textTransform: "uppercase",
+            fontFamily: "'Helvetica Neue', Helvetica, sans-serif",
+          }}>
+            {card.holder}
+          </div>
+        </div>
+        {/* Mastercard interlocking circles */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(180,0,0,0.55)" }} />
+          <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(220,80,0,0.5)", marginLeft: -10 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    Chase octagon logo
 ───────────────────────────────────────────── */
 function ChaseOctagonLogo() {
@@ -710,6 +804,9 @@ function CreditCard({ card, index, visible }) {
   }
   if (card.id === "capital-one-venture-x") {
     return <VentureXCard card={card} index={index} visible={visible} />;
+  }
+  if (card.id === "apple-card") {
+    return <AppleCard card={card} index={index} visible={visible} />;
   }
 
   return (
