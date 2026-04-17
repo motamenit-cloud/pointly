@@ -40,12 +40,11 @@ const KEYFRAMES = `
 ───────────────────────────────────────────── */
 const WALLET_CARDS_SEED = [
   {
-    apiId: "amex-platinum",        // matches CreditCard.id in the database
+    apiId: "amex-platinum",
     holder: "Alex Rivera",
     number: "•••• •••••• •1007",
     pointsRaw: 87200,
     points: "87,200",
-    // Visual overrides to match real Amex Platinum metal card look
     gradient: "linear-gradient(145deg, #c0c8d0 0%, #d4dce4 18%, #e4ecf2 34%, #eef4f8 48%, #e6eef4 62%, #d0d8e0 78%, #bcc4cc 92%, #b4bcc4 100%)",
     textColor: "#1c2430",
     subColor: "rgba(28,36,48,0.55)",
@@ -56,6 +55,13 @@ const WALLET_CARDS_SEED = [
     number: "•••• •••• •••• 4892",
     pointsRaw: 42500,
     points: "42,500",
+  },
+  {
+    apiId: "capital-one-venture-x",
+    holder: "Alex Rivera",
+    number: "•••• •••• •••• 8847",
+    pointsRaw: 34500,
+    points: "34,500",
   },
   {
     apiId: "apple-card",
@@ -154,6 +160,82 @@ function ProgramIcon({ cardId }) {
     );
   }
   return null;
+}
+
+/* ─────────────────────────────────────────────
+   Botanical flower overlay for Amex Platinum
+───────────────────────────────────────────── */
+function BotanicalOverlay() {
+  return (
+    <svg viewBox="0 0 180 110" style={{
+      position: "absolute", right: 0, top: 0,
+      width: "62%", height: "100%",
+      pointerEvents: "none", opacity: 0.72,
+    }} preserveAspectRatio="xMaxYMid slice">
+      {/* Main stems */}
+      <path d="M20,110 C30,85 45,65 58,40 C68,20 78,8 88,2" stroke="#4a7a2a" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
+      <path d="M58,110 C68,88 82,70 98,50 C112,32 128,18 140,8" stroke="#3a6a1a" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
+      <path d="M98,110 C108,92 122,78 140,60 C154,46 166,35 176,24" stroke="#4a7a2a" strokeWidth="1.1" fill="none" strokeLinecap="round"/>
+
+      {/* Leaves */}
+      <ellipse cx="35" cy="88" rx="11" ry="5" fill="#4a7a2a" transform="rotate(-30 35 88)" opacity="0.6"/>
+      <ellipse cx="53" cy="68" rx="10" ry="4.5" fill="#5a8a3a" transform="rotate(20 53 68)" opacity="0.6"/>
+      <ellipse cx="76" cy="48" rx="10" ry="5" fill="#3a6a1a" transform="rotate(-10 76 48)" opacity="0.6"/>
+      <ellipse cx="112" cy="44" rx="9" ry="4" fill="#4a7a2a" transform="rotate(25 112 44)" opacity="0.55"/>
+      <ellipse cx="146" cy="56" rx="9" ry="4.5" fill="#5a8a3a" transform="rotate(-20 146 56)" opacity="0.55"/>
+
+      {/* Yellow flower (dashed circle = stylized petals) */}
+      <circle cx="60" cy="38" r="12" fill="none" stroke="#e8c020" strokeWidth="6" strokeDasharray="5.5 3" opacity="0.8"/>
+      <circle cx="60" cy="38" r="5.5" fill="#d4a010" opacity="0.92"/>
+      <circle cx="60" cy="38" r="2.5" fill="#a07800" opacity="0.9"/>
+
+      {/* Blue cornflower */}
+      <circle cx="142" cy="22" r="10" fill="none" stroke="#5578d8" strokeWidth="5" strokeDasharray="4.5 2.5" opacity="0.75"/>
+      <circle cx="142" cy="22" r="4.5" fill="#3050a8" opacity="0.88"/>
+      <circle cx="142" cy="22" r="2" fill="#1a3070" opacity="0.88"/>
+
+      {/* Pink flower */}
+      <circle cx="164" cy="70" r="9.5" fill="none" stroke="#e05898" strokeWidth="5" strokeDasharray="4 2.5" opacity="0.7"/>
+      <circle cx="164" cy="70" r="4" fill="#b03060" opacity="0.82"/>
+      <circle cx="164" cy="70" r="1.8" fill="#801840" opacity="0.82"/>
+
+      {/* Orange flower */}
+      <circle cx="22" cy="50" r="9" fill="none" stroke="#e07028" strokeWidth="5" strokeDasharray="4 2" opacity="0.72"/>
+      <circle cx="22" cy="50" r="4" fill="#c05010" opacity="0.88"/>
+
+      {/* Small accent flowers */}
+      <circle cx="102" cy="76" r="6" fill="none" stroke="#e05898" strokeWidth="3.5" strokeDasharray="3 2" opacity="0.62"/>
+      <circle cx="102" cy="76" r="2.5" fill="#c03070" opacity="0.82"/>
+
+      <circle cx="30" cy="22" r="5" fill="none" stroke="#e8c020" strokeWidth="3" strokeDasharray="3 2" opacity="0.62"/>
+      <circle cx="30" cy="22" r="2" fill="#d4a010" opacity="0.82"/>
+
+      {/* Buds */}
+      <ellipse cx="82" cy="14" rx="3" ry="5.5" fill="#90c840" opacity="0.52" transform="rotate(-15 82 14)"/>
+      <ellipse cx="118" cy="98" rx="2.8" ry="5" fill="#e080b0" opacity="0.48" transform="rotate(10 118 98)"/>
+      <ellipse cx="172" cy="92" rx="2.5" ry="4.5" fill="#90c840" opacity="0.48" transform="rotate(5 172 92)"/>
+    </svg>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Capital One logo
+───────────────────────────────────────────── */
+function CapitalOneLogo() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+      <svg viewBox="0 0 46 14" style={{ width: 42, height: 13 }}>
+        <path
+          d="M 3,12 C 7,5 14,1 23,1 C 32,1 39,5 43,11 C 44,13 42,14 40,12 C 36,7 30,4 23,4 C 16,4 10,7 6,12 C 4,14 2,14 3,12 Z"
+          fill="rgba(185,208,238,0.88)"
+        />
+      </svg>
+      <div style={{ fontSize: 11.5, lineHeight: 1, letterSpacing: -0.2, color: "rgba(185,208,238,0.88)" }}>
+        <span style={{ fontStyle: "italic", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif" }}>Capital</span>
+        <span style={{ fontWeight: 700, fontFamily: "Arial, Helvetica, sans-serif" }}>One</span>
+      </div>
+    </div>
+  );
 }
 
 /* ─────────────────────────────────────────────
@@ -272,10 +354,13 @@ function AmexPlatinumCard({ card, index, visible }) {
         background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)",
         backgroundSize: "600px 100%", animation: "shimmer 5s infinite linear",
       }} />
-      {/* Decorative border (like the real card) */}
+      {/* Botanical flower overlay */}
+      <BotanicalOverlay />
+
+      {/* Decorative ornate border */}
       <div style={{
         position: "absolute", inset: 7, borderRadius: 13, pointerEvents: "none",
-        border: "1px solid rgba(40,50,60,0.2)",
+        border: "1px solid rgba(40,50,60,0.22)",
       }} />
 
       {/* ── AMERICAN EXPRESS at top ── */}
@@ -409,6 +494,86 @@ function AmexPlatinumCard({ card, index, visible }) {
 }
 
 /* ─────────────────────────────────────────────
+   Capital One Venture X — deep navy blue
+───────────────────────────────────────────── */
+function VentureXCard({ card, index, visible }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={cardShell(hovered, index, visible, {
+        background: "linear-gradient(150deg, #081420 0%, #0d1f40 28%, #102850 55%, #0a1a36 80%, #05101c 100%)",
+      })}
+    >
+      {/* Subtle blue depth glow */}
+      <div style={{
+        position: "absolute", top: "35%", left: "58%",
+        width: 200, height: 160,
+        background: "radial-gradient(ellipse, rgba(25,70,170,0.28) 0%, transparent 70%)",
+        transform: "translate(-50%,-50%)", pointerEvents: "none",
+      }} />
+      {/* Metallic sheen */}
+      <div style={{
+        position: "absolute", inset: 0, borderRadius: 18, pointerEvents: "none",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)",
+      }} />
+      {/* Shimmer */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)",
+        backgroundSize: "600px 100%", animation: "shimmer 6s infinite linear",
+      }} />
+
+      {/* Top: Capital One logo — right-aligned */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "flex-end" }}>
+        <CapitalOneLogo />
+      </div>
+
+      {/* Middle: Chip + contactless */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 12 }}>
+        <Chip color="#7a8ea0" />
+        {/* Contactless arcs */}
+        <svg viewBox="0 0 18 22" style={{ width: 15, height: 19 }} fill="none">
+          <circle cx="5" cy="11" r="1.4" fill="rgba(175,200,230,0.75)"/>
+          <path d="M 8,6.5 Q 13,8.5 13,11 Q 13,13.5 8,15.5" stroke="rgba(175,200,230,0.65)" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
+          <path d="M 9.5,4 Q 15.5,7 15.5,11 Q 15.5,15 9.5,18" stroke="rgba(175,200,230,0.45)" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      {/* VENTURE X lettering */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <div style={{
+          fontFamily: "'Arial', 'Helvetica', sans-serif",
+          fontSize: 16, fontWeight: 300, letterSpacing: 5.5,
+          color: "rgba(182,206,238,0.9)",
+          textShadow: "0 0 18px rgba(80,130,230,0.22)",
+        }}>
+          VENTURE X
+        </div>
+      </div>
+
+      {/* Bottom: cardholder + Visa */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+      }}>
+        <div>
+          <div style={{ fontSize: 9, color: "rgba(175,200,230,0.45)", letterSpacing: 1.5, marginBottom: 2, fontWeight: 700 }}>CARD HOLDER</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(182,206,238,0.92)", letterSpacing: 0.8, textTransform: "uppercase" }}>
+            {card.holder}
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(175,200,230,0.35)", marginTop: 2, letterSpacing: 1.5, fontFamily: "'Courier New', monospace" }}>
+            {card.number}
+          </div>
+        </div>
+        <NetworkLogo type="visa" />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    CreditCard — generic layout (Chase, Apple, etc.)
 ───────────────────────────────────────────── */
 function CreditCard({ card, index, visible }) {
@@ -416,6 +581,9 @@ function CreditCard({ card, index, visible }) {
 
   if (card.id === "amex-platinum") {
     return <AmexPlatinumCard card={card} index={index} visible={visible} />;
+  }
+  if (card.id === "capital-one-venture-x") {
+    return <VentureXCard card={card} index={index} visible={visible} />;
   }
 
   return (
