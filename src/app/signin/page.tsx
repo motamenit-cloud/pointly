@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { GoogleButton } from "@/components/ui/GoogleButton";
-import { saveUserAccount } from "@/lib/userProfile";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -26,24 +26,48 @@ export default function SignInPage() {
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    const namePart = email.split("@")[0].replace(/[^a-zA-Z]/g, " ").trim();
-    const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-    saveUserAccount({ name: displayName, email: email.trim(), signedIn: true });
-    setTimeout(() => {
-      router.push("/");
-    }, 800);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) {
+      setErrors({ email: "Invalid email or password" });
+      setLoading(false);
+      return;
+    }
+
+    router.push("/");
+    router.refresh();
   }
 
-  function handleGoogleSignIn() {
+  async function handleGoogleSignIn() {
     setLoading(true);
-    saveUserAccount({ name: "Google User", email: "", signedIn: true });
-    setTimeout(() => {
-      router.push("/");
-    }, 800);
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setErrors({ email: "Enter your email first" });
+      return;
+    }
+    const supabase = createClient();
+    await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+    });
+    setErrors({ email: "Password reset email sent — check your inbox" });
   }
 
   return (
@@ -54,16 +78,12 @@ export default function SignInPage() {
           <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-8">
             <Plane size={36} className="text-white -rotate-45" />
           </div>
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Welcome back
-          </h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Welcome back</h2>
           <p className="text-white/70 text-lg leading-relaxed">
             Your loyalty programs are waiting. Sign in to find the best
             award flights and maximize your points.
           </p>
         </div>
-
-        {/* Decorative circles */}
         <div className="absolute top-12 left-12 w-32 h-32 rounded-full bg-coral/10" />
         <div className="absolute bottom-16 right-16 w-48 h-48 rounded-full bg-sky-light/5" />
         <div className="absolute top-1/3 right-8 w-16 h-16 rounded-full bg-white/5" />
@@ -72,24 +92,19 @@ export default function SignInPage() {
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          {/* Logo */}
           <div className="animate-fade-in-up mb-8" style={{ animationDelay: "0s" }}>
             <a href="/" className="text-2xl font-bold text-navy">
               Point<span className="text-coral">.ly</span>
             </a>
           </div>
 
-          {/* Heading */}
           <div className="animate-fade-in-up mb-8" style={{ animationDelay: "0.05s" }}>
             <h1 className="text-2xl md:text-3xl font-bold text-navy">
               Sign in to Point.ly
             </h1>
-            <p className="text-text-secondary mt-2">
-              Pick up where you left off
-            </p>
+            <p className="text-text-secondary mt-2">Pick up where you left off</p>
           </div>
 
-          {/* Google Sign In */}
           <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             <GoogleButton onClick={handleGoogleSignIn}>
               {loading ? "Connecting..." : "Continue with Google"}
@@ -100,7 +115,6 @@ export default function SignInPage() {
             <Divider text="or sign in with email" />
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
               <Input
@@ -112,7 +126,6 @@ export default function SignInPage() {
                 error={errors.email}
               />
             </div>
-
             <div className="animate-fade-in-up" style={{ animationDelay: "0.25s" }}>
               <Input
                 label="Password"
@@ -124,41 +137,26 @@ export default function SignInPage() {
               />
             </div>
 
-            {/* Forgot password */}
             <div className="animate-fade-in-up flex justify-end" style={{ animationDelay: "0.28s" }}>
-              <a
-                href="#"
-                className="text-sm text-coral font-medium hover:underline"
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-coral font-medium hover:underline cursor-pointer"
               >
                 Forgot password?
-              </a>
+              </button>
             </div>
 
             <div className="animate-fade-in-up pt-2" style={{ animationDelay: "0.3s" }}>
-              <Button
-                type="submit"
-                variant="secondary"
-                size="lg"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" variant="secondary" size="lg" className="w-full" disabled={loading}>
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </div>
           </form>
 
-          {/* Sign up link */}
-          <p
-            className="animate-fade-in-up text-sm text-text-secondary text-center mt-6"
-            style={{ animationDelay: "0.35s" }}
-          >
+          <p className="animate-fade-in-up text-sm text-text-secondary text-center mt-6" style={{ animationDelay: "0.35s" }}>
             Don&apos;t have an account?{" "}
-            <a
-              href="/signup"
-              className="text-coral font-semibold hover:underline"
-            >
-              Create one
-            </a>
+            <a href="/signup" className="text-coral font-semibold hover:underline">Create one</a>
           </p>
         </div>
       </div>

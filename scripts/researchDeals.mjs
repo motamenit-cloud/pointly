@@ -1,43 +1,15 @@
 /**
- * Claude-powered daily business class deal research agent.
- * Uses Claude Opus 4.6 with the web_search tool to find real-time
- * award deals from blogs, airline sites, transfer bonuses, and flash sales.
+ * Standalone script: runs Claude AI deal research and saves to Upstash Redis.
+ * Called by GitHub Actions daily — no Vercel timeout constraints.
+ *
+ * Usage: node scripts/researchDeals.mjs
+ * Required env vars: ANTHROPIC_API_KEY, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
  */
 
 import Anthropic from "@anthropic-ai/sdk";
 
-export interface AIDeal {
-  /** Origin airport code (e.g. "JFK") */
-  origin: string;
-  /** Destination airport code (e.g. "LHR") */
-  destination: string;
-  /** Airline operating the flight */
-  airline: string;
-  /** Points currency / loyalty program (e.g. "Chase Ultimate Rewards") */
-  program: string;
-  /** Points cost one-way per person */
-  points: number;
-  /** Cash taxes/fees in USD */
-  cashTaxUSD: number;
-  /** Cabin class */
-  cabin: "business" | "first";
-  /** Human-readable notes (why it's a good deal, how to book, expiry, etc.) */
-  notes: string;
-  /** Source URL where the deal was found */
-  sourceUrl?: string;
-  /** Whether availability is confirmed or estimated */
-  confirmed: boolean;
-  /** CPP value if mentioned in the source */
-  cpp?: number;
-}
-
-export interface AIResearchResult {
-  deals: AIDeal[];
-  /** ISO date string when research was run */
-  researchedAt: string;
-  /** Short summary paragraph from Claude */
-  summary: string;
-}
+const AI_DEALS_CACHE_KEY = "ai-deals:v1:latest";
+const AI_DEALS_TTL = 25 * 3600;
 
 const SYSTEM_PROMPT = `You are an expert award travel researcher specializing in business class redemptions using points and miles. Your job is to search the internet right now and find the best current business class award deals available today.
 
@@ -79,14 +51,11 @@ You MUST respond with valid JSON matching this exact schema:
 
 Return 5-15 deals. Only include genuine award redemptions (not cash fares). Prioritize deals available NOW or within the next 60 days.`;
 
-/**
- * Run the Claude web search agent to find today's best business class deals.
- * Uses adaptive thinking + streaming for reliability.
- */
-export async function researchDeals(): Promise<AIResearchResult> {
+async function researchDeals() {
   const client = new Anthropic();
-
   const today = new Date().toISOString().split("T")[0];
+
+  console.log(`[researchDeals] Starting research for ${today}...`);
 
   const userMessage = `Today is ${today}. Search the web right now and find the best business class award redemptions available. Look for:
 1. Current transfer bonuses from Chase, Amex, Citi, Capital One, or Bilt transferring to airline programs
@@ -111,54 +80,29 @@ Return your findings as JSON.`;
         cache_control: { type: "ephemeral" },
       },
     ],
-    tools: [
-      {
-        type: "web_search_20260209",
-        name: "web_search",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
-    ],
+    tools: [{ type: "web_search_20260209", name: "web_search" }],
     messages: [{ role: "user", content: userMessage }],
   });
 
   const finalMessage = await stream.finalMessage();
 
-  // Extract text content from response
   for (const block of finalMessage.content) {
-    if (block.type === "text") {
-      fullText += block.text;
-    }
+    if (block.type === "text") fullText += block.text;
   }
 
-  // Parse JSON from the response (Claude may wrap it in markdown code fences)
+  console.log(`[researchDeals] Got response (${fullText.length} chars)`);
+
   const jsonMatch =
     fullText.match(/```json\s*([\s\S]*?)```/) ||
     fullText.match(/```\s*([\s\S]*?)```/) ||
     fullText.match(/(\{[\s\S]*\})/);
 
-  if (!jsonMatch) {
-    console.error("[aiResearch] No JSON found in response:", fullText.slice(0, 500));
-    throw new Error("Claude did not return valid JSON");
-  }
+  if (!jsonMatch) throw new Error("No JSON found in Claude response");
 
-  let parsed: { summary: string; deals: AIDeal[] };
-  try {
-    parsed = JSON.parse(jsonMatch[1]);
-  } catch (err) {
-    console.error("[aiResearch] JSON parse error:", err, jsonMatch[1].slice(0, 500));
-    throw new Error("Failed to parse Claude JSON response");
-  }
+  const parsed = JSON.parse(jsonMatch[1]);
 
-  // Validate and sanitize deals
-  const deals: AIDeal[] = (parsed.deals ?? [])
-    .filter(
-      (d) =>
-        d.origin &&
-        d.destination &&
-        d.airline &&
-        d.program &&
-        d.points > 0,
-    )
+  const deals = (parsed.deals ?? [])
+    .filter((d) => d.origin && d.destination && d.airline && d.program && d.points > 0)
     .map((d) => ({
       origin: String(d.origin).toUpperCase().slice(0, 3),
       destination: String(d.destination).toUpperCase().slice(0, 3),
@@ -178,4 +122,34 @@ Return your findings as JSON.`;
     researchedAt: new Date().toISOString(),
     summary: String(parsed.summary ?? ""),
   };
+}
+
+async function saveToRedis(result) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) throw new Error("Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN");
+
+  const response = await fetch(`${url}/set/${AI_DEALS_CACHE_KEY}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify([JSON.stringify(result), "EX", AI_DEALS_TTL]),
+  });
+
+  if (!response.ok) throw new Error(`Redis set failed: ${response.statusText}`);
+  console.log(`[researchDeals] Saved ${result.deals.length} deals to Redis`);
+}
+
+// Main
+try {
+  const result = await researchDeals();
+  await saveToRedis(result);
+  console.log(`✓ Done — ${result.deals.length} deals saved`);
+  console.log(`Summary: ${result.summary}`);
+} catch (err) {
+  console.error("✗ Failed:", err);
+  process.exit(1);
 }

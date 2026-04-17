@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { GoogleButton } from "@/components/ui/GoogleButton";
-import { saveUserAccount } from "@/lib/userProfile";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -16,6 +16,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
@@ -30,22 +31,63 @@ export default function SignUpPage() {
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    saveUserAccount({ name: name.trim(), email: email.trim(), signedIn: true });
-    setTimeout(() => {
-      router.push("/onboarding");
-    }, 800);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: { name: name.trim() },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+      },
+    });
+
+    if (error) {
+      setErrors({ email: error.message });
+      setLoading(false);
+      return;
+    }
+
+    setSuccess(true);
+    setLoading(false);
   }
 
-  function handleGoogleSignUp() {
+  async function handleGoogleSignUp() {
     setLoading(true);
-    saveUserAccount({ name: "Google User", email: "", signedIn: true });
-    setTimeout(() => {
-      router.push("/onboarding");
-    }, 800);
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+      },
+    });
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+            <Plane size={28} className="text-emerald-600 -rotate-45" />
+          </div>
+          <h2 className="text-2xl font-bold text-navy mb-2">Check your email</h2>
+          <p className="text-text-muted">
+            We sent a confirmation link to <strong>{email}</strong>.
+            Click it to activate your account and get started.
+          </p>
+          <button
+            onClick={() => router.push("/signin")}
+            className="mt-6 text-coral font-semibold hover:underline cursor-pointer"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -64,8 +106,6 @@ export default function SignUpPage() {
             best award redemptions across all their loyalty programs.
           </p>
         </div>
-
-        {/* Decorative circles */}
         <div className="absolute top-12 left-12 w-32 h-32 rounded-full bg-coral/10" />
         <div className="absolute bottom-16 right-16 w-48 h-48 rounded-full bg-sky-light/5" />
         <div className="absolute top-1/3 right-8 w-16 h-16 rounded-full bg-white/5" />
@@ -74,14 +114,12 @@ export default function SignUpPage() {
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          {/* Logo */}
           <div className="animate-fade-in-up mb-8" style={{ animationDelay: "0s" }}>
             <a href="/" className="text-2xl font-bold text-navy">
               Point<span className="text-coral">.ly</span>
             </a>
           </div>
 
-          {/* Heading */}
           <div className="animate-fade-in-up mb-8" style={{ animationDelay: "0.05s" }}>
             <h1 className="text-2xl md:text-3xl font-bold text-navy">
               Create your account
@@ -91,7 +129,6 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          {/* Google Sign Up */}
           <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             <GoogleButton onClick={handleGoogleSignUp}>
               {loading ? "Connecting..." : "Sign up with Google"}
@@ -102,7 +139,6 @@ export default function SignUpPage() {
             <Divider text="or sign up with email" />
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
               <Input
@@ -114,7 +150,6 @@ export default function SignUpPage() {
                 error={errors.name}
               />
             </div>
-
             <div className="animate-fade-in-up" style={{ animationDelay: "0.25s" }}>
               <Input
                 label="Email"
@@ -125,7 +160,6 @@ export default function SignUpPage() {
                 error={errors.email}
               />
             </div>
-
             <div className="animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
               <Input
                 label="Password"
@@ -136,47 +170,23 @@ export default function SignUpPage() {
                 error={errors.password}
               />
             </div>
-
             <div className="animate-fade-in-up pt-2" style={{ animationDelay: "0.35s" }}>
-              <Button
-                type="submit"
-                variant="secondary"
-                size="lg"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" variant="secondary" size="lg" className="w-full" disabled={loading}>
                 {loading ? "Creating account..." : "Create Account"}
               </Button>
             </div>
           </form>
 
-          {/* Terms */}
-          <p
-            className="animate-fade-in-up text-xs text-text-muted text-center mt-4"
-            style={{ animationDelay: "0.4s" }}
-          >
+          <p className="animate-fade-in-up text-xs text-text-muted text-center mt-4" style={{ animationDelay: "0.4s" }}>
             By signing up, you agree to our{" "}
-            <a href="#" className="text-coral hover:underline">
-              Terms of Service
-            </a>{" "}
+            <a href="#" className="text-coral hover:underline">Terms of Service</a>{" "}
             and{" "}
-            <a href="#" className="text-coral hover:underline">
-              Privacy Policy
-            </a>
+            <a href="#" className="text-coral hover:underline">Privacy Policy</a>
           </p>
 
-          {/* Sign in link */}
-          <p
-            className="animate-fade-in-up text-sm text-text-secondary text-center mt-6"
-            style={{ animationDelay: "0.45s" }}
-          >
+          <p className="animate-fade-in-up text-sm text-text-secondary text-center mt-6" style={{ animationDelay: "0.45s" }}>
             Already have an account?{" "}
-            <a
-              href="/signin"
-              className="text-coral font-semibold hover:underline"
-            >
-              Sign in
-            </a>
+            <a href="/signin" className="text-coral font-semibold hover:underline">Sign in</a>
           </p>
         </div>
       </div>
