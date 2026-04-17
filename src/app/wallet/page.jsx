@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { formatLastSynced, isStale } from "@/lib/programLinks";
 import { getUserProfile } from "@/lib/userProfile";
+import { createClient } from "@/lib/supabase/client";
 
 const KEYFRAMES = `
   @keyframes shimmer {
@@ -1167,6 +1169,201 @@ function OpportunityAlert({ totalPointsRaw, totalDollars, visible }) {
 }
 
 /* ─────────────────────────────────────────────
+   Locked / unauthenticated state
+───────────────────────────────────────────── */
+function WalletLockedState() {
+  return (
+    <div className="min-h-screen bg-cream">
+      <Header />
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 flex flex-col items-center text-center">
+
+        {/* Globe + cards illustration */}
+        <div className="relative mb-10 select-none" style={{ width: 320, height: 300 }}>
+          <svg viewBox="0 0 320 300" width="320" height="300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="globe-grad" cx="42%" cy="38%" r="58%">
+                <stop offset="0%" stopColor="#6ea8d8" />
+                <stop offset="60%" stopColor="#3b82c4" />
+                <stop offset="100%" stopColor="#1e3a8a" />
+              </radialGradient>
+              <radialGradient id="globe-shine" cx="35%" cy="28%" r="45%">
+                <stop offset="0%" stopColor="white" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </radialGradient>
+              <clipPath id="globe-clip">
+                <circle cx="160" cy="155" r="105" />
+              </clipPath>
+              <filter id="card-shadow">
+                <feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.18" />
+              </filter>
+            </defs>
+
+            {/* Globe body */}
+            <circle cx="160" cy="155" r="105" fill="url(#globe-grad)" />
+
+            {/* Land masses (simplified) */}
+            <g clipPath="url(#globe-clip)" opacity="0.7">
+              {/* North America */}
+              <path d="M90,100 Q100,85 120,90 Q135,92 140,110 Q145,128 130,140 Q115,152 95,145 Q78,138 80,120 Z" fill="#4ade80" opacity="0.55" />
+              {/* South America */}
+              <path d="M115,155 Q128,150 135,165 Q142,182 136,200 Q128,215 115,208 Q102,200 104,183 Z" fill="#4ade80" opacity="0.55" />
+              {/* Europe/Africa */}
+              <path d="M168,90 Q182,88 190,100 Q196,112 190,125 Q183,138 170,135 Q158,132 158,118 Q158,104 168,90 Z" fill="#4ade80" opacity="0.5" />
+              <path d="M165,140 Q178,138 185,155 Q190,172 182,190 Q174,205 160,202 Q148,198 148,182 Q148,162 165,140 Z" fill="#4ade80" opacity="0.55" />
+              {/* Asia */}
+              <path d="M195,88 Q220,82 238,95 Q250,108 244,125 Q236,140 218,138 Q200,135 194,118 Z" fill="#4ade80" opacity="0.5" />
+            </g>
+
+            {/* Globe shine */}
+            <circle cx="160" cy="155" r="105" fill="url(#globe-shine)" />
+
+            {/* Location pins on globe */}
+            {[
+              { x: 118, y: 120, label: "NYC" },
+              { x: 178, y: 105, label: "LON" },
+              { x: 220, y: 115, label: "DXB" },
+              { x: 165, y: 175, label: "JNB" },
+              { x: 125, y: 178, label: "GRU" },
+            ].map(({ x, y, label }) => (
+              <g key={label}>
+                <circle cx={x} cy={y} r="5" fill="#f97316" opacity="0.9" />
+                <circle cx={x} cy={y} r="2.5" fill="white" opacity="0.9" />
+              </g>
+            ))}
+
+            {/* Route lines */}
+            <g clipPath="url(#globe-clip)" stroke="rgba(255,255,255,0.35)" strokeWidth="1" fill="none" strokeDasharray="3 3">
+              <path d="M118,120 Q148,95 178,105" />
+              <path d="M178,105 Q200,110 220,115" />
+              <path d="M118,120 Q122,148 125,178" />
+            </g>
+
+            {/* ── Floating credit cards ── */}
+
+            {/* Gold card — top left */}
+            <g transform="rotate(-20, 60, 90)" filter="url(#card-shadow)">
+              <rect x="18" y="60" width="88" height="56" rx="7" fill="url(#gold-grad)" />
+              <defs>
+                <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#d97706" />
+                </linearGradient>
+              </defs>
+              <rect x="28" y="80" width="18" height="14" rx="2" fill="#fcd34d" opacity="0.8" />
+              <rect x="28" y="100" width="50" height="4" rx="2" fill="rgba(255,255,255,0.4)" />
+              <rect x="28" y="107" width="30" height="3" rx="1.5" fill="rgba(255,255,255,0.3)" />
+            </g>
+
+            {/* Silver card — left */}
+            <g transform="rotate(-8, 55, 165)" filter="url(#card-shadow)">
+              <rect x="14" y="138" width="88" height="56" rx="7" fill="url(#silver-grad)" />
+              <defs>
+                <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#e2e8f0" />
+                  <stop offset="100%" stopColor="#94a3b8" />
+                </linearGradient>
+              </defs>
+              <rect x="24" y="156" width="18" height="14" rx="2" fill="#cbd5e1" opacity="0.9" />
+              <rect x="24" y="178" width="50" height="4" rx="2" fill="rgba(100,100,120,0.3)" />
+              <rect x="24" y="185" width="30" height="3" rx="1.5" fill="rgba(100,100,120,0.25)" />
+            </g>
+
+            {/* Dark card — bottom left */}
+            <g transform="rotate(-5, 80, 220)" filter="url(#card-shadow)">
+              <rect x="40" y="208" width="88" height="56" rx="7" fill="url(#dark-grad)" />
+              <defs>
+                <linearGradient id="dark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+              </defs>
+              <rect x="50" y="226" width="18" height="14" rx="2" fill="#334155" opacity="0.9" />
+              <rect x="50" y="247" width="50" height="4" rx="2" fill="rgba(255,255,255,0.2)" />
+              <rect x="50" y="254" width="30" height="3" rx="1.5" fill="rgba(255,255,255,0.15)" />
+            </g>
+
+            {/* Teal card — top right */}
+            <g transform="rotate(18, 255, 85)" filter="url(#card-shadow)">
+              <rect x="210" y="55" width="88" height="56" rx="7" fill="url(#teal-grad)" />
+              <defs>
+                <linearGradient id="teal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0891b2" />
+                  <stop offset="100%" stopColor="#0e7490" />
+                </linearGradient>
+              </defs>
+              <rect x="220" y="73" width="18" height="14" rx="2" fill="#22d3ee" opacity="0.5" />
+              <rect x="220" y="93" width="50" height="4" rx="2" fill="rgba(255,255,255,0.3)" />
+              <rect x="220" y="100" width="30" height="3" rx="1.5" fill="rgba(255,255,255,0.25)" />
+            </g>
+
+            {/* Red card — right */}
+            <g transform="rotate(12, 258, 160)" filter="url(#card-shadow)">
+              <rect x="216" y="130" width="88" height="56" rx="7" fill="url(#red-grad)" />
+              <defs>
+                <linearGradient id="red-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </linearGradient>
+              </defs>
+              <rect x="226" y="148" width="18" height="14" rx="2" fill="#fca5a5" opacity="0.5" />
+              <rect x="226" y="168" width="50" height="4" rx="2" fill="rgba(255,255,255,0.25)" />
+              <rect x="226" y="175" width="30" height="3" rx="1.5" fill="rgba(255,255,255,0.2)" />
+            </g>
+
+            {/* Sparkle decorations */}
+            {[
+              { x: 52, y: 48, s: 0.8 }, { x: 270, y: 42, s: 1 },
+              { x: 290, y: 200, s: 0.7 }, { x: 40, y: 240, s: 0.9 },
+            ].map(({ x, y, s }, i) => (
+              <g key={i} transform={`translate(${x},${y}) scale(${s})`}>
+                <path d="M0,-10 C1,-4 1,-4 6,0 C1,4 1,4 0,10 C-1,4 -1,4 -6,0 C-1,-4 -1,-4 0,-10 Z" fill="#C9A020" opacity="0.7" />
+              </g>
+            ))}
+          </svg>
+        </div>
+
+        {/* Headline */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-navy leading-tight mb-4">
+          Unlock deals tailored<br />to your wallet
+        </h1>
+
+        {/* Body copy */}
+        <p className="text-base text-text-muted max-w-md mb-8 leading-relaxed">
+          Add your cards and points balances to see exactly which awards you can book today — and how close you are to the rest.
+        </p>
+
+        {/* Feature pills */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {[
+            "Personalized deal matches",
+            "Points gap tracker",
+            "Transfer partner suggestions",
+          ].map((f) => (
+            <span key={f} className="flex items-center gap-1.5 text-sm font-medium text-navy bg-white border border-navy/10 px-4 py-2 rounded-full shadow-sm">
+              <span className="text-coral">✦</span> {f}
+            </span>
+          ))}
+        </div>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <a
+            href="/signup"
+            className="bg-coral text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-coral/90 transition-colors shadow-sm"
+          >
+            Create free account
+          </a>
+          <a href="/signin" className="text-sm font-medium text-navy hover:text-coral transition-colors">
+            Already have an account? <span className="font-semibold underline underline-offset-2">Log in</span>
+          </a>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    Main page
 ───────────────────────────────────────────── */
 export default function WalletPage() {
@@ -1175,7 +1372,20 @@ export default function WalletPage() {
   const [tipsVisible, setTipsVisible] = useState(false);
   const [cards, setCards] = useState([]);
   const [deals, setDeals] = useState([]);
+  const [user, setUser] = useState(undefined); // undefined = loading, null = signed out
   const tipsRef = useRef(null);
+
+  // Auth state
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Fetch card catalog and active offers from the API, merge with wallet seed data
   useEffect(() => {
@@ -1273,6 +1483,16 @@ export default function WalletPage() {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  // Show locked state for unauthenticated users
+  if (user === null) return <WalletLockedState />;
+
+  // Loading spinner while auth resolves
+  if (user === undefined) return (
+    <div className="min-h-screen bg-cream flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full border-2 border-navy/20 border-t-navy animate-spin" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-cream">
