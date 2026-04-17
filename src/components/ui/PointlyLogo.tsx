@@ -23,7 +23,7 @@ export function PointlyLogo({ className, height = 32 }: { className?: string; he
       </text>
       {/* Gold 4-pointed sparkle — centered on where the "i" dot sits */}
       <path
-        d="M69,10 C70,14.5 70,14.5 74.5,18 C70,21.5 70,21.5 69,26 C68,21.5 68,21.5 63.5,18 C68,14.5 68,14.5 69,10 Z"
+        d="M69,8 C70.5,13 70.5,13 76,18 C70.5,23 70.5,23 69,28 C67.5,23 67.5,23 62,18 C67.5,13 67.5,13 69,8 Z"
         fill="#C9A020"
       />
     </svg>
