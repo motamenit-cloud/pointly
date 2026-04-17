@@ -169,51 +169,60 @@ function BotanicalOverlay() {
   return (
     <svg viewBox="0 0 180 110" style={{
       position: "absolute", right: 0, top: 0,
-      width: "62%", height: "100%",
-      pointerEvents: "none", opacity: 0.72,
+      width: "68%", height: "100%",
+      pointerEvents: "none", opacity: 0.88,
     }} preserveAspectRatio="xMaxYMid slice">
-      {/* Main stems */}
-      <path d="M20,110 C30,85 45,65 58,40 C68,20 78,8 88,2" stroke="#4a7a2a" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
-      <path d="M58,110 C68,88 82,70 98,50 C112,32 128,18 140,8" stroke="#3a6a1a" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
-      <path d="M98,110 C108,92 122,78 140,60 C154,46 166,35 176,24" stroke="#4a7a2a" strokeWidth="1.1" fill="none" strokeLinecap="round"/>
+      {/* Main stems — thicker, lusher */}
+      <path d="M10,110 C22,82 40,62 56,38 C68,18 80,6 90,0" stroke="#3d7020" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      <path d="M48,110 C60,86 76,68 96,48 C112,30 130,14 144,4" stroke="#2d6010" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      <path d="M90,110 C102,90 118,74 138,56 C154,42 168,30 178,20" stroke="#3d7020" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      {/* Extra vine branching */}
+      <path d="M56,38 C64,30 72,26 80,24" stroke="#4a8028" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      <path d="M96,48 C106,38 116,32 124,28" stroke="#3a7018" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
 
-      {/* Leaves */}
-      <ellipse cx="35" cy="88" rx="11" ry="5" fill="#4a7a2a" transform="rotate(-30 35 88)" opacity="0.6"/>
-      <ellipse cx="53" cy="68" rx="10" ry="4.5" fill="#5a8a3a" transform="rotate(20 53 68)" opacity="0.6"/>
-      <ellipse cx="76" cy="48" rx="10" ry="5" fill="#3a6a1a" transform="rotate(-10 76 48)" opacity="0.6"/>
-      <ellipse cx="112" cy="44" rx="9" ry="4" fill="#4a7a2a" transform="rotate(25 112 44)" opacity="0.55"/>
-      <ellipse cx="146" cy="56" rx="9" ry="4.5" fill="#5a8a3a" transform="rotate(-20 146 56)" opacity="0.55"/>
+      {/* Leaves — bigger, more varied */}
+      <ellipse cx="28" cy="90" rx="14" ry="6" fill="#3d7020" transform="rotate(-35 28 90)" opacity="0.75"/>
+      <ellipse cx="50" cy="70" rx="13" ry="5.5" fill="#4a8028" transform="rotate(22 50 70)" opacity="0.72"/>
+      <ellipse cx="76" cy="50" rx="13" ry="6" fill="#2d6010" transform="rotate(-12 76 50)" opacity="0.72"/>
+      <ellipse cx="108" cy="42" rx="12" ry="5.5" fill="#3d7020" transform="rotate(28 108 42)" opacity="0.68"/>
+      <ellipse cx="148" cy="52" rx="12" ry="5.5" fill="#4a8028" transform="rotate(-18 148 52)" opacity="0.65"/>
+      <ellipse cx="80" cy="24" rx="9" ry="4" fill="#5a9030" transform="rotate(-30 80 24)" opacity="0.6"/>
+      <ellipse cx="124" cy="28" rx="9" ry="4" fill="#3d7020" transform="rotate(15 124 28)" opacity="0.6"/>
 
-      {/* Yellow flower (dashed circle = stylized petals) */}
-      <circle cx="60" cy="38" r="12" fill="none" stroke="#e8c020" strokeWidth="6" strokeDasharray="5.5 3" opacity="0.8"/>
-      <circle cx="60" cy="38" r="5.5" fill="#d4a010" opacity="0.92"/>
-      <circle cx="60" cy="38" r="2.5" fill="#a07800" opacity="0.9"/>
+      {/* Yellow sunflower — large, vivid */}
+      <circle cx="58" cy="36" r="15" fill="none" stroke="#f0c818" strokeWidth="7.5" strokeDasharray="6 3.5" opacity="0.92"/>
+      <circle cx="58" cy="36" r="7" fill="#d4980c" opacity="0.96"/>
+      <circle cx="58" cy="36" r="3.2" fill="#a87008" opacity="0.95"/>
 
-      {/* Blue cornflower */}
-      <circle cx="142" cy="22" r="10" fill="none" stroke="#5578d8" strokeWidth="5" strokeDasharray="4.5 2.5" opacity="0.75"/>
-      <circle cx="142" cy="22" r="4.5" fill="#3050a8" opacity="0.88"/>
-      <circle cx="142" cy="22" r="2" fill="#1a3070" opacity="0.88"/>
+      {/* Blue cornflower — large */}
+      <circle cx="146" cy="20" r="13" fill="none" stroke="#4868d8" strokeWidth="6.5" strokeDasharray="5.5 3" opacity="0.88"/>
+      <circle cx="146" cy="20" r="6" fill="#2848a8" opacity="0.92"/>
+      <circle cx="146" cy="20" r="2.8" fill="#102870" opacity="0.9"/>
 
-      {/* Pink flower */}
-      <circle cx="164" cy="70" r="9.5" fill="none" stroke="#e05898" strokeWidth="5" strokeDasharray="4 2.5" opacity="0.7"/>
-      <circle cx="164" cy="70" r="4" fill="#b03060" opacity="0.82"/>
-      <circle cx="164" cy="70" r="1.8" fill="#801840" opacity="0.82"/>
+      {/* Pink flower — large */}
+      <circle cx="166" cy="68" r="12" fill="none" stroke="#e04890" strokeWidth="6" strokeDasharray="5 3" opacity="0.85"/>
+      <circle cx="166" cy="68" r="5.5" fill="#b02860" opacity="0.9"/>
+      <circle cx="166" cy="68" r="2.4" fill="#801040" opacity="0.9"/>
 
       {/* Orange flower */}
-      <circle cx="22" cy="50" r="9" fill="none" stroke="#e07028" strokeWidth="5" strokeDasharray="4 2" opacity="0.72"/>
-      <circle cx="22" cy="50" r="4" fill="#c05010" opacity="0.88"/>
+      <circle cx="18" cy="48" r="11" fill="none" stroke="#e86820" strokeWidth="6" strokeDasharray="5 2.5" opacity="0.85"/>
+      <circle cx="18" cy="48" r="5" fill="#c04810" opacity="0.9"/>
+      <circle cx="18" cy="48" r="2" fill="#903008" opacity="0.9"/>
 
-      {/* Small accent flowers */}
-      <circle cx="102" cy="76" r="6" fill="none" stroke="#e05898" strokeWidth="3.5" strokeDasharray="3 2" opacity="0.62"/>
-      <circle cx="102" cy="76" r="2.5" fill="#c03070" opacity="0.82"/>
+      {/* Purple/lavender accent flower */}
+      <circle cx="120" cy="76" r="9" fill="none" stroke="#9060d0" strokeWidth="5" strokeDasharray="4 2.5" opacity="0.78"/>
+      <circle cx="120" cy="76" r="4" fill="#6038a8" opacity="0.85"/>
+      <circle cx="120" cy="76" r="1.8" fill="#401880" opacity="0.85"/>
 
-      <circle cx="30" cy="22" r="5" fill="none" stroke="#e8c020" strokeWidth="3" strokeDasharray="3 2" opacity="0.62"/>
-      <circle cx="30" cy="22" r="2" fill="#d4a010" opacity="0.82"/>
+      {/* Small yellow accent */}
+      <circle cx="30" cy="20" r="7" fill="none" stroke="#f0c818" strokeWidth="4" strokeDasharray="4 2" opacity="0.75"/>
+      <circle cx="30" cy="20" r="3" fill="#d4980c" opacity="0.88"/>
 
-      {/* Buds */}
-      <ellipse cx="82" cy="14" rx="3" ry="5.5" fill="#90c840" opacity="0.52" transform="rotate(-15 82 14)"/>
-      <ellipse cx="118" cy="98" rx="2.8" ry="5" fill="#e080b0" opacity="0.48" transform="rotate(10 118 98)"/>
-      <ellipse cx="172" cy="92" rx="2.5" ry="4.5" fill="#90c840" opacity="0.48" transform="rotate(5 172 92)"/>
+      {/* Buds — more prominent */}
+      <ellipse cx="84" cy="12" rx="4" ry="7" fill="#7ab830" opacity="0.65" transform="rotate(-18 84 12)"/>
+      <ellipse cx="118" cy="96" rx="3.5" ry="6.5" fill="#e070a8" opacity="0.58" transform="rotate(12 118 96)"/>
+      <ellipse cx="174" cy="88" rx="3" ry="5.5" fill="#7ab830" opacity="0.55" transform="rotate(6 174 88)"/>
+      <ellipse cx="100" cy="6" rx="3" ry="5" fill="#4868d8" opacity="0.52" transform="rotate(-8 100 6)"/>
     </svg>
   );
 }
@@ -494,6 +503,120 @@ function AmexPlatinumCard({ card, index, visible }) {
 }
 
 /* ─────────────────────────────────────────────
+   Chase octagon logo
+───────────────────────────────────────────── */
+function ChaseOctagonLogo() {
+  return (
+    <svg viewBox="0 0 38 38" style={{ width: 30, height: 30, flexShrink: 0 }}>
+      {/* Octagon outline */}
+      <polygon
+        points="13,1 25,1 37,13 37,25 25,37 13,37 1,25 1,13"
+        fill="rgba(255,255,255,0.12)"
+        stroke="rgba(255,255,255,0.75)"
+        strokeWidth="1.6"
+      />
+      {/* Chase mark — two curved arcs forming the stylized C */}
+      <path d="M19,7 C27,7 32,12 32,19" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.8" strokeLinecap="round"/>
+      <path d="M19,31 C11,31 6,26 6,19" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Chase Sapphire Preferred — iconic dark sapphire blue
+───────────────────────────────────────────── */
+function ChaseSapphireCard({ card, index, visible }) {
+  const [hovered, setHovered] = useState(false);
+  const isSapphireReserve = card.id === "chase-sapphire-reserve";
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={cardShell(hovered, index, visible, {
+        background: isSapphireReserve
+          ? "linear-gradient(145deg, #111822 0%, #1a2438 30%, #1e2c48 55%, #141e30 80%, #0c1220 100%)"
+          : "linear-gradient(145deg, #0a1e58 0%, #112680 25%, #1a3aa8 45%, #122e90 65%, #0a1e60 100%)",
+      })}
+    >
+      {/* Sapphire gem radial glow — the signature visual */}
+      <div style={{
+        position: "absolute", top: "44%", left: "60%",
+        width: 200, height: 200,
+        background: isSapphireReserve
+          ? "radial-gradient(circle, rgba(120,160,240,0.32) 0%, rgba(70,110,200,0.15) 40%, transparent 70%)"
+          : "radial-gradient(circle, rgba(100,160,255,0.38) 0%, rgba(50,100,230,0.18) 40%, transparent 70%)",
+        transform: "translate(-50%,-50%)", pointerEvents: "none", borderRadius: "50%",
+      }} />
+      {/* Secondary softer glow */}
+      <div style={{
+        position: "absolute", top: "52%", left: "55%",
+        width: 120, height: 120,
+        background: "radial-gradient(circle, rgba(180,210,255,0.18) 0%, transparent 70%)",
+        transform: "translate(-50%,-50%)", pointerEvents: "none", borderRadius: "50%",
+      }} />
+      {/* Metallic sheen */}
+      <div style={{
+        position: "absolute", inset: 0, borderRadius: 18, pointerEvents: "none",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 45%, transparent 100%)",
+      }} />
+      {/* Shimmer */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)",
+        backgroundSize: "600px 100%", animation: "shimmer 5s infinite linear",
+      }} />
+
+      {/* Top: Chase logo + card name */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <ChaseOctagonLogo />
+          <div style={{
+            fontSize: 10, fontWeight: 800, letterSpacing: 1.2,
+            color: "rgba(255,255,255,0.78)", textTransform: "uppercase",
+          }}>
+            {isSapphireReserve ? "Sapphire Reserve" : "Sapphire Preferred"}
+          </div>
+        </div>
+        <Chip color="#c8a832" />
+      </div>
+
+      {/* Points balance */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <div style={{
+          fontSize: "clamp(26px,4.5vw,36px)", fontWeight: 800,
+          color: "#ffffff", lineHeight: 1, letterSpacing: -1,
+        }}>
+          {card.points}
+        </div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 3, fontWeight: 600, letterSpacing: 1.2 }}>
+          ULTIMATE REWARDS
+        </div>
+      </div>
+
+      {/* Bottom: cardholder + Visa */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+      }}>
+        <div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, marginBottom: 2, fontWeight: 700 }}>CARD HOLDER</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.9)", letterSpacing: 0.5, textTransform: "uppercase" }}>
+            {card.holder}
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2, letterSpacing: 1.5, fontFamily: "'Courier New', monospace" }}>
+            {card.number}
+          </div>
+        </div>
+        <NetworkLogo type="visa" />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    Capital One Venture X — deep navy blue
 ───────────────────────────────────────────── */
 function VentureXCard({ card, index, visible }) {
@@ -581,6 +704,9 @@ function CreditCard({ card, index, visible }) {
 
   if (card.id === "amex-platinum") {
     return <AmexPlatinumCard card={card} index={index} visible={visible} />;
+  }
+  if (card.id === "chase-sapphire-preferred" || card.id === "chase-sapphire-reserve") {
+    return <ChaseSapphireCard card={card} index={index} visible={visible} />;
   }
   if (card.id === "capital-one-venture-x") {
     return <VentureXCard card={card} index={index} visible={visible} />;
