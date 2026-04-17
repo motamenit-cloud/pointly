@@ -6,15 +6,19 @@ import type { PersonalizedFlight } from "@/lib/personalizeResults";
 
 /* Airport code → local destination image */
 const DESTINATION_IMAGES: Record<string, string> = {
-  CDG: "/images/destinations/paris.jpg",
-  ORY: "/images/destinations/paris.jpg",
-  BCN: "/images/destinations/barcelona.jpg",
-  MEX: "/images/destinations/mexico-city.jpg",
-  GIG: "/images/destinations/rio-de-janeiro.jpg",
-  GRU: "/images/destinations/rio-de-janeiro.jpg",
-  DEL: "/images/destinations/india.jpg",
-  BOM: "/images/destinations/india.jpg",
-  BLR: "/images/destinations/india.jpg",
+  // User-provided illustrations (.png)
+  CDG: "/images/destinations/paris.png",
+  ORY: "/images/destinations/paris.png",
+  BCN: "/images/destinations/barcelona.png",
+  MEX: "/images/destinations/mexico-city.png",
+  GIG: "/images/destinations/rio-de-janeiro.png",
+  GRU: "/images/destinations/rio-de-janeiro.png",
+  DEL: "/images/destinations/india.png",
+  BOM: "/images/destinations/india.png",
+  BLR: "/images/destinations/india.png",
+  FCO: "/images/destinations/rome.png",
+  CIA: "/images/destinations/rome.png",
+  // Photo fallbacks (.jpg)
   LHR: "/images/destinations/london.jpg",
   LGW: "/images/destinations/london.jpg",
   NRT: "/images/destinations/tokyo.jpg",
@@ -96,19 +100,19 @@ export function DealCard({
         {/* Gradient overlay for text legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-        {/* Route badge — top left */}
+        {/* Route badge */}
         <div className="absolute top-3 left-3">
           <span className="bg-white/15 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full border border-white/20">
             {deal.departureAirport} → {deal.arrivalAirport}
           </span>
         </div>
 
-        {/* CPP badge — top right */}
+        {/* CPP badge */}
         <div className="absolute top-3 right-3">
           <CppBadgeChip cpp={deal.cpp} badge={deal.cppBadge} />
         </div>
 
-        {/* Points — bottom of image */}
+        {/* Points */}
         <div className="absolute bottom-3 left-3 right-3">
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-bold text-white leading-none">
@@ -133,13 +137,11 @@ export function DealCard({
       <div className={`bg-white p-4 flex flex-col gap-3 border border-t-0 rounded-b-2xl ${
         highlighted ? "border-emerald-200" : "border-navy/8"
       }`}>
-        {/* Program */}
         <p className="text-xs text-text-muted">
           Book via{" "}
           <span className="font-semibold text-navy">{deal.bestProgram}</span>
         </p>
 
-        {/* Transfer option pills */}
         {topTransfers.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {topTransfers.map((opt, i) => (
@@ -153,7 +155,6 @@ export function DealCard({
           </div>
         )}
 
-        {/* Affordability indicator */}
         {canAfford && userProgramName && (
           <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
             <CheckCircle size={13} />
