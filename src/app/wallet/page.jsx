@@ -1181,14 +1181,18 @@ function WalletLockedState() {
         <div className="relative mb-10 select-none" style={{ width: 320, height: 300 }}>
           <svg viewBox="0 0 320 300" width="320" height="300" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <radialGradient id="globe-grad" cx="42%" cy="38%" r="58%">
-                <stop offset="0%" stopColor="#6ea8d8" />
-                <stop offset="60%" stopColor="#3b82c4" />
-                <stop offset="100%" stopColor="#1e3a8a" />
+              <radialGradient id="globe-grad" cx="40%" cy="35%" r="60%">
+                <stop offset="0%" stopColor="#7ec8e3" />
+                <stop offset="45%" stopColor="#2b7dc8" />
+                <stop offset="100%" stopColor="#0d3b8c" />
               </radialGradient>
-              <radialGradient id="globe-shine" cx="35%" cy="28%" r="45%">
-                <stop offset="0%" stopColor="white" stopOpacity="0.18" />
+              <radialGradient id="globe-shine" cx="32%" cy="25%" r="42%">
+                <stop offset="0%" stopColor="white" stopOpacity="0.22" />
                 <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="limb-dark" cx="50%" cy="50%" r="50%">
+                <stop offset="68%" stopColor="transparent" />
+                <stop offset="100%" stopColor="rgba(0,10,50,0.55)" />
               </radialGradient>
               <clipPath id="globe-clip">
                 <circle cx="160" cy="155" r="105" />
@@ -1198,102 +1202,78 @@ function WalletLockedState() {
               </filter>
             </defs>
 
+            {/* Atmosphere glow */}
+            <circle cx="160" cy="155" r="113" fill="rgba(100,180,255,0.12)" />
+            <circle cx="160" cy="155" r="109" fill="rgba(100,180,255,0.08)" />
+
             {/* Globe body */}
             <circle cx="160" cy="155" r="105" fill="url(#globe-grad)" />
 
-            {/* Land masses (simplified) */}
-            <g clipPath="url(#globe-clip)" opacity="0.7">
-              {/* North America */}
-              <path d="M90,100 Q100,85 120,90 Q135,92 140,110 Q145,128 130,140 Q115,152 95,145 Q78,138 80,120 Z" fill="#4ade80" opacity="0.55" />
-              {/* South America */}
-              <path d="M115,155 Q128,150 135,165 Q142,182 136,200 Q128,215 115,208 Q102,200 104,183 Z" fill="#4ade80" opacity="0.55" />
-              {/* Europe/Africa */}
-              <path d="M168,90 Q182,88 190,100 Q196,112 190,125 Q183,138 170,135 Q158,132 158,118 Q158,104 168,90 Z" fill="#4ade80" opacity="0.5" />
-              <path d="M165,140 Q178,138 185,155 Q190,172 182,190 Q174,205 160,202 Q148,198 148,182 Q148,162 165,140 Z" fill="#4ade80" opacity="0.55" />
-              {/* Asia */}
-              <path d="M195,88 Q220,82 238,95 Q250,108 244,125 Q236,140 218,138 Q200,135 194,118 Z" fill="#4ade80" opacity="0.5" />
+            {/* ── Grid lines (latitude + longitude) ── */}
+            <g clipPath="url(#globe-clip)" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" fill="none">
+              {/* Latitude lines */}
+              <ellipse cx="160" cy="103" rx="91"  ry="12" />  {/* 30°N */}
+              <ellipse cx="160" cy="155" rx="105" ry="14" />  {/* Equator */}
+              <ellipse cx="160" cy="207" rx="91"  ry="12" />  {/* 30°S */}
+              <ellipse cx="160" cy="64"  rx="52"  ry="7"  />  {/* 60°N */}
+              <ellipse cx="160" cy="246" rx="52"  ry="7"  />  {/* 60°S */}
+              {/* Longitude lines */}
+              <line x1="160" y1="50" x2="160" y2="260" />
+              <ellipse cx="160" cy="155" rx="52"  ry="105" />
+              <ellipse cx="160" cy="155" rx="91"  ry="105" />
             </g>
+
+            {/* ── Continent shapes ── */}
+            <g clipPath="url(#globe-clip)" fill="#3ecf7a" opacity="0.62">
+              {/* Greenland */}
+              <path d="M138,54 Q150,48 158,56 Q163,64 156,73 Q147,80 137,74 Q129,67 138,54 Z" />
+              {/* North America */}
+              <path d="M88,72 Q84,88 77,106 Q72,124 74,142 Q78,158 88,168 Q98,177 108,182 Q116,188 120,197
+                       Q113,202 106,195 Q96,178 90,160 Q84,140 88,116 Q93,94 108,80 Q120,70 136,65
+                       Q122,58 108,57 Q96,58 88,72 Z" />
+              {/* Florida */}
+              <path d="M108,182 Q114,195 110,200 Q104,199 103,189 Z" />
+              {/* South America */}
+              <path d="M112,200 Q124,194 134,199 Q148,208 150,228 Q148,252 136,265
+                       Q125,272 114,263 Q102,250 102,230 Q102,210 112,200 Z" />
+              {/* Europe (Iberia + Britain) */}
+              <path d="M170,82 Q180,78 188,84 Q192,92 188,100 Q184,107 175,106
+                       Q167,103 164,96 Q164,87 170,82 Z" />
+              <path d="M179,74 Q186,72 190,78 Q191,83 186,86 Q181,86 178,81 Z" />
+              {/* Africa */}
+              <path d="M168,112 Q182,108 192,120 Q200,134 198,158 Q195,182 184,203
+                       Q173,220 161,216 Q149,210 146,193 Q143,172 150,150
+                       Q156,128 168,112 Z" />
+              {/* Partial Asia (right edge) */}
+              <path d="M198,88 Q215,84 228,92 Q236,102 230,116 Q222,126 208,124
+                       Q196,120 194,108 Z" />
+            </g>
+
+            {/* Limb darkening — makes sphere look 3D */}
+            <circle cx="160" cy="155" r="105" fill="url(#limb-dark)" />
 
             {/* Globe shine */}
             <circle cx="160" cy="155" r="105" fill="url(#globe-shine)" />
 
-            {/* Location pins on globe */}
+            {/* Location pins */}
             {[
-              { x: 118, y: 120, label: "NYC" },
-              { x: 178, y: 105, label: "LON" },
-              { x: 220, y: 115, label: "DXB" },
-              { x: 165, y: 175, label: "JNB" },
-              { x: 125, y: 178, label: "GRU" },
+              { x: 112, y: 130, label: "NYC" },
+              { x: 178, y: 100, label: "LON" },
+              { x: 213, y: 112, label: "DXB" },
+              { x: 168, y: 178, label: "JNB" },
+              { x: 124, y: 182, label: "GRU" },
             ].map(({ x, y, label }) => (
               <g key={label}>
-                <circle cx={x} cy={y} r="5" fill="#f97316" opacity="0.9" />
-                <circle cx={x} cy={y} r="2.5" fill="white" opacity="0.9" />
+                <circle cx={x} cy={y} r="5" fill="#f97316" opacity="0.92" />
+                <circle cx={x} cy={y} r="2.5" fill="white" opacity="0.95" />
               </g>
             ))}
 
             {/* Route lines */}
-            <g clipPath="url(#globe-clip)" stroke="rgba(255,255,255,0.35)" strokeWidth="1" fill="none" strokeDasharray="3 3">
-              <path d="M118,120 Q148,95 178,105" />
-              <path d="M178,105 Q200,110 220,115" />
-              <path d="M118,120 Q122,148 125,178" />
-            </g>
-
-            {/* ── Floating credit cards ── */}
-
-            {/* Gold card — top left */}
-            <g transform="rotate(-20, 60, 90)" filter="url(#card-shadow)">
-              <rect x="18" y="60" width="88" height="56" rx="7" fill="url(#gold-grad)" />
-              <defs>
-                <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-              </defs>
-              <rect x="28" y="80" width="18" height="14" rx="2" fill="#fcd34d" opacity="0.8" />
-              <rect x="28" y="100" width="50" height="4" rx="2" fill="rgba(255,255,255,0.4)" />
-              <rect x="28" y="107" width="30" height="3" rx="1.5" fill="rgba(255,255,255,0.3)" />
-            </g>
-
-            {/* Silver card — left */}
-            <g transform="rotate(-8, 55, 165)" filter="url(#card-shadow)">
-              <rect x="14" y="138" width="88" height="56" rx="7" fill="url(#silver-grad)" />
-              <defs>
-                <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#e2e8f0" />
-                  <stop offset="100%" stopColor="#94a3b8" />
-                </linearGradient>
-              </defs>
-              <rect x="24" y="156" width="18" height="14" rx="2" fill="#cbd5e1" opacity="0.9" />
-              <rect x="24" y="178" width="50" height="4" rx="2" fill="rgba(100,100,120,0.3)" />
-              <rect x="24" y="185" width="30" height="3" rx="1.5" fill="rgba(100,100,120,0.25)" />
-            </g>
-
-            {/* Dark card — bottom left */}
-            <g transform="rotate(-5, 80, 220)" filter="url(#card-shadow)">
-              <rect x="40" y="208" width="88" height="56" rx="7" fill="url(#dark-grad)" />
-              <defs>
-                <linearGradient id="dark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#1e293b" />
-                  <stop offset="100%" stopColor="#0f172a" />
-                </linearGradient>
-              </defs>
-              <rect x="50" y="226" width="18" height="14" rx="2" fill="#334155" opacity="0.9" />
-              <rect x="50" y="247" width="50" height="4" rx="2" fill="rgba(255,255,255,0.2)" />
-              <rect x="50" y="254" width="30" height="3" rx="1.5" fill="rgba(255,255,255,0.15)" />
-            </g>
-
-            {/* Teal card — top right */}
-            <g transform="rotate(18, 255, 85)" filter="url(#card-shadow)">
-              <rect x="210" y="55" width="88" height="56" rx="7" fill="url(#teal-grad)" />
-              <defs>
-                <linearGradient id="teal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#0891b2" />
-                  <stop offset="100%" stopColor="#0e7490" />
-                </linearGradient>
-              </defs>
-              <rect x="220" y="73" width="18" height="14" rx="2" fill="#22d3ee" opacity="0.5" />
-              <rect x="220" y="93" width="50" height="4" rx="2" fill="rgba(255,255,255,0.3)" />
-              <rect x="220" y="100" width="30" height="3" rx="1.5" fill="rgba(255,255,255,0.25)" />
+            <g clipPath="url(#globe-clip)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" fill="none" strokeDasharray="3 4">
+              <path d="M112,130 Q145,92 178,100" />
+              <path d="M178,100 Q196,106 213,112" />
+              <path d="M112,130 Q118,156 124,182" />
             </g>
 
             {/* Red card — right */}
