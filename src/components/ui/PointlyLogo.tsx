@@ -1,7 +1,10 @@
 export function PointlyLogo({ className, height = 32 }: { className?: string; height?: number }) {
+  // viewBox sized to give room for descenders (p, y) below baseline and the star above
+  // Baseline at y=54; cap-height ≈ 34px → top of letters at y≈20
+  // "i" dot center in Nunito 700/48px ≈ y=18, x≈69 (after "po" ≈ 61px + 8px center)
   return (
     <svg
-      viewBox="0 0 185 54"
+      viewBox="0 0 200 66"
       height={height}
       className={className}
       xmlns="http://www.w3.org/2000/svg"
@@ -10,7 +13,7 @@ export function PointlyLogo({ className, height = 32 }: { className?: string; he
     >
       <text
         x="1"
-        y="50"
+        y="54"
         fontFamily="Nunito, sans-serif"
         fontWeight="700"
         fontSize="48"
@@ -18,9 +21,9 @@ export function PointlyLogo({ className, height = 32 }: { className?: string; he
       >
         pointly
       </text>
-      {/* Gold 4-pointed sparkle star above the "i" dot */}
+      {/* Gold 4-pointed sparkle — centered on where the "i" dot sits */}
       <path
-        d="M69,2 C70,6.5 70,6.5 74.5,8.5 C70,10.5 70,10.5 69,15 C68,10.5 68,10.5 63.5,8.5 C68,6.5 68,6.5 69,2 Z"
+        d="M69,10 C70,14.5 70,14.5 74.5,18 C70,21.5 70,21.5 69,26 C68,21.5 68,21.5 63.5,18 C68,14.5 68,14.5 69,10 Z"
         fill="#C9A020"
       />
     </svg>
