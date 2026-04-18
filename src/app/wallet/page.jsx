@@ -1223,30 +1223,28 @@ function WalletLockedState() {
               <ellipse cx="160" cy="155" rx="91"  ry="105" />
             </g>
 
-            {/* ── Continent shapes ── */}
-            <g clipPath="url(#globe-clip)" fill="#3ecf7a" opacity="0.62">
+            {/* ── Continent shapes — orthographic projection, center lat=20°N lon=-20° ── */}
+            <g clipPath="url(#globe-clip)" fill="#4ade80" opacity="0.70">
               {/* Greenland */}
-              <path d="M138,54 Q150,48 158,56 Q163,64 156,73 Q147,80 137,74 Q129,67 138,54 Z" />
-              {/* North America */}
-              <path d="M88,72 Q84,88 77,106 Q72,124 74,142 Q78,158 88,168 Q98,177 108,182 Q116,188 120,197
-                       Q113,202 106,195 Q96,178 90,160 Q84,140 88,116 Q93,94 108,80 Q120,70 136,65
-                       Q122,58 108,57 Q96,58 88,72 Z" />
-              {/* Florida */}
-              <path d="M108,182 Q114,195 110,200 Q104,199 103,189 Z" />
+              <path d="M144,65 L161,63 L159,71 L143,87 L137,80 Z" />
+              {/* North America — traced clockwise from Baffin to Central America */}
+              <path d="M131,69 L120,78 L122,92 L121,103 L108,105 L96,106
+                       L90,115 L78,130 L71,115 L70,133 L65,141
+                       L61,128 L63,116 L74,96 L93,75 L110,63 L132,54 Z" />
               {/* South America */}
-              <path d="M112,200 Q124,194 134,199 Q148,208 150,228 Q148,252 136,265
-                       Q125,272 114,263 Q102,250 102,230 Q102,210 112,200 Z" />
-              {/* Europe (Iberia + Britain) */}
-              <path d="M170,82 Q180,78 188,84 Q192,92 188,100 Q184,107 175,106
-                       Q167,103 164,96 Q164,87 170,82 Z" />
-              <path d="M179,74 Q186,72 190,78 Q191,83 186,86 Q181,86 178,81 Z" />
-              {/* Africa */}
-              <path d="M168,112 Q182,108 192,120 Q200,134 198,158 Q195,182 184,203
-                       Q173,220 161,216 Q149,210 146,193 Q143,172 150,150
-                       Q156,128 168,112 Z" />
-              {/* Partial Asia (right edge) */}
-              <path d="M198,88 Q215,84 228,92 Q236,102 230,116 Q222,126 208,124
-                       Q196,120 194,108 Z" />
+              <path d="M73,155 L89,164 L133,198 L122,224 L111,235
+                       L110,246 L114,249 L84,210 L69,173 Z" />
+              {/* Europe — Iberia through Scandinavia, clockwise */}
+              <path d="M176,122 L182,127 L205,127 L224,126 L231,125
+                       L224,110 L216,117 L208,117 L201,112
+                       L191,94 L190,81 L184,70
+                       L175,91 L183,100 L185,111 Z" />
+              {/* Africa — west coast, south, partial east coast */}
+              <path d="M182,127 L165,166 L198,180 L211,186
+                       L214,221 L214,234 L243,201 L250,190
+                       L224,126 L205,127 Z" />
+              {/* Middle East / Arabian Peninsula */}
+              <path d="M224,110 L245,112 L258,117 L253,123 L255,130 L231,125 Z" />
             </g>
 
             {/* Limb darkening — makes sphere look 3D */}
@@ -1300,6 +1298,24 @@ function WalletLockedState() {
               </g>
             ))}
           </svg>
+        </div>
+
+        {/* AI chat bubble */}
+        <div className="relative mb-8 max-w-sm w-full mx-auto">
+          <div className="bg-white rounded-2xl rounded-tl-none shadow-md border border-navy/8 px-5 py-4 text-left">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-[#C9A020] text-[10px] font-bold">✦</span>
+              </div>
+              <span className="text-[10px] font-bold text-navy/60 uppercase tracking-wider">Pointly AI</span>
+            </div>
+            <p className="text-sm text-navy leading-relaxed">
+              Based on your credit card points, here is the best deal to book your flight in <span className="font-semibold">business class to Paris</span> — 57,000 Flying Blue miles via Amex MR transfer.
+            </p>
+          </div>
+          {/* Speech bubble tail pointing up */}
+          <div className="absolute -top-2 left-5 w-0 h-0"
+            style={{ borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "10px solid white" }} />
         </div>
 
         {/* Headline */}
