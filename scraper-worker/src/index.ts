@@ -10,6 +10,7 @@
  *   GET /health      — health check
  */
 
+import "dotenv/config";
 import express from "express";
 import pino from "pino";
 import { v4 as uuid } from "uuid";
