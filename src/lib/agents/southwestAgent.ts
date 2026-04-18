@@ -19,6 +19,7 @@
 import type { AirlineAgent, RevenueProgramConfig } from "./types";
 import type { AwardResult, CabinClass, SearchParams } from "../providers/types";
 import { CABIN_NORMALIZE } from "../providers/types";
+import { getCachedAward } from "../scraper/cache";
 
 const CONFIG: RevenueProgramConfig = {
   carrierCode: "WN",
@@ -118,9 +119,22 @@ export const southwestAgent: AirlineAgent = {
   },
 
   async searchAward(params: SearchParams): Promise<AwardResult[]> {
-    // Southwest only has one cabin class (economy)
-    // All cabin selections map to the "Wanna Get Away" fare for best value
     const cabin = CABIN_NORMALIZE[params.cabin.toLowerCase()] || "economy";
+
+    // Check for live scraped data first
+    try {
+      const cached = await getCachedAward("WN", params.origin, params.destination, params.date, cabin);
+      if (cached) {
+        return cached.results.map((r) => ({
+          ...r,
+          dataQuality: cached.fresh ? ("live" as const) : ("cached" as const),
+        }));
+      }
+    } catch {
+      // Cache error — fall through to estimate
+    }
+
+    // Southwest only has one cabin class (economy)
     const tier = getRouteTier(params.origin, params.destination);
     const fares = TYPICAL_FARES[tier];
 

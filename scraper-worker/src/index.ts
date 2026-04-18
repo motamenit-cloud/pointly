@@ -16,6 +16,11 @@ import { v4 as uuid } from "uuid";
 import { getBrowserPool } from "./pool.js";
 import { scrapeAA } from "./scrapers/aa.js";
 import { scrapeDelta } from "./scrapers/delta.js";
+import { scrapeAirCanada } from "./scrapers/aircanada.js";
+import { scrapeBA } from "./scrapers/britishairways.js";
+import { scrapeFlyingBlue } from "./scrapers/flyingblue.js";
+import { scrapeSouthwest } from "./scrapers/southwest.js";
+import { scrapeJetBlue } from "./scrapers/jetblue.js";
 import type { ScrapeJob, ScrapeRequest } from "./types.js";
 
 const logger = pino({ level: "info" });
@@ -99,7 +104,8 @@ app.get("/status/:id", (req, res) => {
 
 /* ── GET /health ── */
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", jobs: jobs.size });
+  const hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
+  res.json({ status: "ok", jobs: jobs.size, claudeAgentsEnabled: hasAnthropicKey });
 });
 
 /* ── Scraper runner ── */
@@ -118,6 +124,21 @@ async function runScraper(jobId: string, request: ScrapeRequest) {
         break;
       case "DL":
         results = await scrapeDelta(request);
+        break;
+      case "AC":
+        results = await scrapeAirCanada(request);
+        break;
+      case "BA":
+        results = await scrapeBA(request);
+        break;
+      case "AF":
+        results = await scrapeFlyingBlue(request);
+        break;
+      case "WN":
+        results = await scrapeSouthwest(request);
+        break;
+      case "B6":
+        results = await scrapeJetBlue(request);
         break;
       default:
         throw new Error(`Unsupported carrier: ${request.carrier}`);

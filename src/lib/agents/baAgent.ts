@@ -12,6 +12,7 @@
 import type { AirlineAgent, AirlineAgentConfig, AwardChart } from "./types";
 import type { AwardResult, CabinClass, SearchParams } from "../providers/types";
 import { CABIN_NORMALIZE } from "../providers/types";
+import { getCachedAward } from "../scraper/cache";
 import { calculateDistance } from "./distances";
 
 const CONFIG: AirlineAgentConfig = {
@@ -88,6 +89,20 @@ export const baAgent: AirlineAgent = {
 
   async searchAward(params: SearchParams): Promise<AwardResult[]> {
     const cabin = CABIN_NORMALIZE[params.cabin.toLowerCase()] || "economy";
+
+    // Check for live scraped data first
+    try {
+      const cached = await getCachedAward("BA", params.origin, params.destination, params.date, cabin);
+      if (cached) {
+        return cached.results.map((r) => ({
+          ...r,
+          dataQuality: cached.fresh ? ("live" as const) : ("cached" as const),
+        }));
+      }
+    } catch {
+      // Cache error — fall through to estimate
+    }
+
     const distance = calculateDistance(params.origin, params.destination) ?? 3500;
     const mileageCost = lookupAwardCost(cabin, distance);
 

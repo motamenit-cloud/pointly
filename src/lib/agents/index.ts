@@ -29,6 +29,8 @@ import { aviancaAgent } from "./aviancaAgent";
 import { copaAgent } from "./copaAgent";
 import { aeromexicoAgent } from "./aeromexicoAgent";
 import { golAgent } from "./golAgent";
+import { aircanadaAgent } from "./aircanadaAgent";
+import { flyingblueAgent } from "./flyingblueAgent";
 
 /** All registered airline agents. Add new agents here. */
 const AGENTS: AirlineAgent[] = [
@@ -54,6 +56,8 @@ const AGENTS: AirlineAgent[] = [
   copaAgent,
   aeromexicoAgent,
   golAgent,
+  aircanadaAgent,
+  flyingblueAgent,
 ];
 
 /**

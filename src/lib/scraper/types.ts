@@ -7,7 +7,7 @@ import type { AwardResult, CabinClass } from "../providers/types";
 
 /** Request to scrape award availability for a specific airline. */
 export interface ScrapeRequest {
-  carrier: string; // IATA code: "AA", "DL"
+  carrier: string; // IATA code: "AA", "DL", "AC", "BA", "AF", "WN", "B6"
   origin: string;
   destination: string;
   date: string; // YYYY-MM-DD
@@ -53,14 +53,27 @@ export interface CacheEntry {
   expiresAt: number; // Unix timestamp in ms
 }
 
-/** Airlines that support live scraping. */
-export const SCRAPABLE_CARRIERS = ["AA", "DL"] as const;
+/** Airlines that support live scraping via the scraper worker. */
+export const SCRAPABLE_CARRIERS = [
+  "AA",  // American Airlines — Playwright, direct
+  "DL",  // Delta SkyMiles — Playwright, via Virgin Atlantic
+  "AC",  // Air Canada Aeroplan — Claude agent (Star Alliance)
+  "BA",  // British Airways Avios — Claude agent (oneworld)
+  "AF",  // Air France/KLM Flying Blue — Claude agent (SkyTeam)
+  "WN",  // Southwest Rapid Rewards — Claude agent
+  "B6",  // JetBlue TrueBlue — Claude agent
+] as const;
 export type ScrapableCarrier = (typeof SCRAPABLE_CARRIERS)[number];
 
-/** TTL per airline in seconds. */
+/** TTL per carrier in seconds. */
 export const CACHE_TTL: Record<ScrapableCarrier, number> = {
-  AA: 900,  // 15 minutes
-  DL: 600,  // 10 minutes (more volatile dynamic pricing)
+  AA: 900,   // 15 minutes
+  DL: 600,   // 10 minutes (volatile dynamic pricing)
+  AC: 900,   // 15 minutes
+  BA: 900,   // 15 minutes
+  AF: 900,   // 15 minutes
+  WN: 600,   // 10 minutes (revenue-based, changes with demand)
+  B6: 600,   // 10 minutes
 };
 
 /** Maximum age for stale cache fallback (2 hours). */

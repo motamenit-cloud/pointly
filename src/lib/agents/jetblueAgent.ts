@@ -15,6 +15,7 @@
 import type { AirlineAgent, RevenueProgramConfig } from "./types";
 import type { AwardResult, CabinClass, SearchParams } from "../providers/types";
 import { CABIN_NORMALIZE } from "../providers/types";
+import { getCachedAward } from "../scraper/cache";
 
 const CONFIG: RevenueProgramConfig = {
   carrierCode: "B6",
@@ -115,6 +116,20 @@ export const jetblueAgent: AirlineAgent = {
 
   async searchAward(params: SearchParams): Promise<AwardResult[]> {
     const cabin = CABIN_NORMALIZE[params.cabin.toLowerCase()] || "economy";
+
+    // Check for live scraped data first
+    try {
+      const cached = await getCachedAward("B6", params.origin, params.destination, params.date, cabin);
+      if (cached) {
+        return cached.results.map((r) => ({
+          ...r,
+          dataQuality: cached.fresh ? ("live" as const) : ("cached" as const),
+        }));
+      }
+    } catch {
+      // Cache error — fall through to estimate
+    }
+
     const tier = getRouteTier(params.origin, params.destination);
     const typicalFare = TYPICAL_FARES[tier]?.[cabin] || TYPICAL_FARES.longDomestic[cabin];
     const mileageCost = cashToPoints(typicalFare);

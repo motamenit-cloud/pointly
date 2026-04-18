@@ -7,7 +7,7 @@ import type { CabinClass } from "@/lib/providers/types";
 /**
  * POST /api/scrape/trigger
  *
- * Triggers live scraping for airlines that support it (AA, DL).
+ * Triggers live scraping for airlines that support it (AA, DL, AC, BA, AF, WN, B6).
  * Checks cache first — skips scraping if fresh data exists.
  * Returns job IDs for the client to poll.
  */
